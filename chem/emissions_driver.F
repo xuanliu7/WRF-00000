@@ -788,6 +788,7 @@ real, save :: freq_industry(24)    = &
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,                     &
          ust,znt,clayfrac,sandfrac,clayfrac_nga,sandfrac_nga,afwa_dustloft,&!EDH
          tot_dust,tot_edust,vis_dust,dust_alpha,dust_gamma,dust_smtune,dust_ustune, &
+         srcmask_r1, srcmask_out, &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
