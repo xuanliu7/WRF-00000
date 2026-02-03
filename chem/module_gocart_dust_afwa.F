@@ -19,7 +19,6 @@ CONTAINS
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,      &
          ust,znt,clay_wrf,sand_wrf,clay_nga,sand_nga,afwa_dustloft,                 &
          tot_dust,tot_edust,vis_dust,alpha,gamma,smtune,ustune,            &
-         srcmask_r1, srcmask_out,                                          &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -58,8 +57,6 @@ CONTAINS
                                                      sand_wrf,             &
                                                      clay_nga,             &
                                                      sand_nga,             &
-                                                     srcmask_r1,           &
-                                                     srcmask_out,          &
                                                      snowh
    REAL, DIMENSION( ims:ime , kms:kme , jms:jme )   ,                      &
          INTENT(IN   ) ::                            alt,                  &
@@ -92,7 +89,6 @@ CONTAINS
   REAL, INTENT(IN   ) :: alpha, gamma, smtune, ustune
   INTEGER :: smois_opt
   real    :: dz_lowest
-  REAL :: m_r1, m_out, d3_inc
 
   conver=1.e-9
   converi=1.e9
@@ -292,16 +288,7 @@ CONTAINS
 
       call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
                        erodtot, ilwi, gravsm, volsm, airden,dz_lowest,   &
-                       bems, ustart, g, drylimit, alpha, gamma, smois_opt)
-      
-      ! --- Tag ONLY bin 3 emissions into DUST_3_R1 and DUST_3_OUT ---
-      ! bems(3) is emitted mass for bin 3: (kg/m2) per dt
-      ! Convert to mixing ratio increment and then to ug/kg using converi.
-      m_r1  = MAX(0.0, MIN(1.0, grid%srcmask_r1(i,j)))
-      m_out = MAX(0.0, MIN(1.0, grid%srcmask_out(i,j)))
-      d3_inc = REAL( bems(3) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-      chem(i,kts,j,p_dust_3_r1)  = chem(i,kts,j,p_dust_3_r1)  + d3_inc * m_r1
-      chem(i,kts,j,p_dust_3_out) = chem(i,kts,j,p_dust_3_out) + d3_inc * m_out               
+                       bems, ustart, g, drylimit, alpha, gamma, smois_opt)           
 
       IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
         dustin(i,j,1:5)=tc(1:5)*converi
