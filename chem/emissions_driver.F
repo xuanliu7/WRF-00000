@@ -27,6 +27,7 @@ CONTAINS
          u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,dms_0,              &
          erup_beg,erup_end,                                                &
          xland,xlat,xlong,z_at_w,z,smois,dustin,seasin,                    &
+         srcmask_r1, srcmask_out,                                          &
          sebio_iso,sebio_oli,sebio_api,sebio_lim,sebio_xyl,                &
          sebio_hc3,sebio_ete,sebio_olt,sebio_ket,sebio_ald,                &   
          sebio_hcho,sebio_eth,sebio_ora2,sebio_co,sebio_nr,                &
@@ -195,6 +196,8 @@ CONTAINS
                                                      rmol,                 &
                                                      ust,                  &
                                                      xland,                &
+                                                     srcmask_r1,           &
+                                                     srcmask_out,          &
                                                      xlat,                 &
                                                      xlong,                &
                                                      znt,                  &
