@@ -78,6 +78,8 @@ state    real  traj_lat       {ntraj}       dyn_em      1         Z     irh     
 # Variables from WPS
 #
 
+state    real   srcmask_r1     ij       misc        1        -     i0   "SRCMASK_R1"   "Region 1 source mask (0/1)"        "1"
+state    real   srcmask_out    ij       misc        1        -     i0   "SRCMASK_OUT"  "Outside-of-defined-regions mask (0/1)"  "1"
 state    real   u_gc           igj      dyn_em      1        XZ    i1  "UU"     "x-wind component"    "m s-1"
 state    real   v_gc           igj      dyn_em      1        YZ    i1  "VV"     "y-wind component"    "m s-1"
 state    real   t_gc           igj      dyn_em      1        Z     i1  "TT"     "temperature"         "K"
@@ -291,11 +293,11 @@ state    real   mub_fine        ij     dyn_em      1         -      -           
 state    real   mub_save        ij     dyn_em      1         -      -           "mub_save" "nest temp, holds orig fine grid mub" "Pa"
 state    real   mu0             ij     dyn_em      1         -      i1          "mu0" "initial dry mass in column" "Pa"
 state    real   mudf            ij     dyn_em      1         -      -           "mudf" "" ""
-state    real   muu             ij     dyn_em      1          X     -           "muu"
+state    real   muu             ij     dyn_em      1          X     hr           "muu"
 state    real   muus            ij     dyn_em      1          X     -           "muus"
-state    real   muv             ij     dyn_em      1          Y     -           "muv"
+state    real   muv             ij     dyn_em      1          Y     hr           "muv"
 state    real   muvs            ij     dyn_em      1          Y     -           "muvs"
-state    real   mut             ij     dyn_em      1          -     -           "mut"
+state    real   mut             ij     dyn_em      1          -     hr           "mut"
 state    real   muts            ij     dyn_em      1          -     -           "muts"
 i1       real   muave           ij     dyn_em      1          -     
 i1       real   mu_save         ij     dyn_em      1          -     
@@ -324,7 +326,7 @@ state    real  xkmv_meso       ikj     dyn_em        1         -      -      "XK
 # Pressure and Density
 state    real   p              ikj     dyn_em      1         -      irh       "p"           "perturbation pressure"         "Pa"
 state    real   al             ikj     dyn_em      1         -      ir        "al"          "inverse perturbation density"  "m3 kg-1"
-state    real   alt            ikj     dyn_em      1         -      r         "alt"         "inverse density"               "m3 kg-1"
+state    real   alt            ikj     dyn_em      1         -      hr         "alt"         "inverse density"               "m3 kg-1"
 state    real   alb            ikj     dyn_em      1         -      irdus     "alb"         "inverse base density"          "m3 kg-1"
 state    real   zx             ikj     dyn_em      1         XZ     -         " "  " "  " "    
 state    real   zy             ikj     dyn_em      1         YZ     -         " "  " "  " "   
@@ -1945,7 +1947,7 @@ state    integer NYEAR          -       misc        1         -     r        "NY
 state    real    NDAY           -       misc        1         -     r        "NDAY"                  "ACCUM TIMESTEPS IN A DAY"                      ""
 state    real  XLAND            ij      misc        1         -     i02rhd=(interp_fcnm_imask)u=(copy_fcnm)       "XLAND"                 "LAND MASK (1 FOR LAND, 2 FOR WATER)"          ""      
 state    real  cplmask       i{ncpldom}j      misc        1       z        i0r     "CPLMASK"    "COUPLING MASK (0:VALUE FROM SST UPDATE; 1:VALUE FROM COUPLED OCEAN), vertical dim is number of external domains"  ""
-state    real  ZNT              ij      misc        1         -      i3r     "ZNT"                   "TIME-VARYING ROUGHNESS LENGTH"                "m"      
+state    real  ZNT              ij      misc        1         -      i3rh     "ZNT"                   "TIME-VARYING ROUGHNESS LENGTH"                "m"      
 state    real  CK               ij      misc        1         -      r        "CK"                    "ENTHALPY EXCHANGE COEFF AT 10 m"                      ""
 state    real  CKA              ij      misc        1         -      r        "CKA"                   "ENTHALPY EXCHANGE COEFF AT LOWEST MODEL LVL"          ""
 state    real  CD               ij      misc        1         -      r        "CD"                    "DRAG COEFF AT 10m"                      ""
