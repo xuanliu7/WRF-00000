@@ -54,7 +54,8 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
   REAL*8, DIMENSION (1,1,kte-kts+1,4) :: sea_salt
   
   INTEGER :: uoc_flag  ! flag for UoC dust schemes
- 
+  REAL :: old3, ratio3
+  REAL, PARAMETER :: tiny = 1.0e-30 
 !
 !   REAL*8, DIMENSION (5), PARAMETER :: den_dust(5)=(/2500.,2650.,2650.,2650.,2650./)
 !   REAL*8, DIMENSION (5), PARAMETER :: reff_dust(5)=(/0.73D-6,1.4D-6,2.4D-6,4.5D-6,8.0D-6/)
@@ -143,7 +144,15 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
              kk = kk+1
              chem(i,k,j,p_dust_1)=ddust(1,1,kk,1)                         ! dust for size bin 1 [ug/kg]
              chem(i,k,j,p_dust_2)=ddust(1,1,kk,2)                         ! ...
-             chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)                         ! ...
+            !  chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)                         ! ...
+
+             ! --- Apply settling to tagged bin-3 tracers using the same fractional change as DUST_3 ---
+             old3 = MAX( chem(i,k,j,p_dust_3), tiny )
+             chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)
+             ratio3 = MAX( chem(i,k,j,p_dust_3) / old3, 0.0 )
+             chem(i,k,j,p_dust_3_r1)  = chem(i,k,j,p_dust_3_r1)  * ratio3
+             chem(i,k,j,p_dust_3_out) = chem(i,k,j,p_dust_3_out) * ratio3
+             
              chem(i,k,j,p_dust_4)=ddust(1,1,kk,4)                         ! ...
              chem(i,k,j,p_dust_5)=ddust(1,1,kk,5)                         ! dust for size bin 5 (dust_opt 3: for all size bins) [ug/kg]
              
