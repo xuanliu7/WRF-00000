@@ -14,7 +14,11 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
            dustin,seasin,dx,g,                                      &
            dustgraset_1,dustgraset_2,dustgraset_3,                  & 
            dustgraset_4,dustgraset_5,                               & 
-           setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,imod,       & 
+           ! Add tagged species deposition arrays
+           dustgraset_3_r1, dustgraset_3_out,                       &
+           setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,            & 
+           ! Add tagged species settling velocity arrays
+           setvel_3_r1, setvel_3_out, imod,                         &
            ids,ide,jds,jde,kds,kde,                                 &
            ims,ime,jms,jme,kms,kme,                                 &
            its,ite,jts,jte,kts,kte)
@@ -43,19 +47,26 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
         dustgraset_1,dustgraset_2,dustgraset_3,                      &
         dustgraset_4,dustgraset_5,                                   &
         setvel_1,setvel_2,setvel_3,setvel_4,setvel_5 
-                       
+  ! Add tagged species arrays
+  REAL, DIMENSION(ims:ime,jms:jme), INTENT(INOUT)::                  &
+        dustgraset_3_r1, dustgraset_3_out,                           &
+        setvel_3_r1, setvel_3_out
+
   REAL*8,  DIMENSION (1,1,5)          :: graset_dust,grasetvel_dust 
+  ! Add tagged species deposition and velocity arrays
+  REAL*8,  DIMENSION (1,1,1)          :: graset_dust_r1, grasetvel_dust_r1
+  REAL*8,  DIMENSION (1,1,1)          :: graset_dust_out, grasetvel_dust_out
   REAL*8,  DIMENSION (1,1,4)          :: graset_ss,grasetvel_ss
 
   REAL, INTENT(IN) :: dt,dx,g
   INTEGER          :: kkk,nmx,i,j,k,kk,lmx,iseas,idust
   REAL*8, DIMENSION (1,1,kte-kts+1)   :: tmp,airden,p_mid,delz,rh
   REAL*8, DIMENSION (1,1,kte-kts+1,5) :: ddust
+  ! Add arrays for tagged dust species (single bin each)
+  REAL*8, DIMENSION (1,1,kte-kts+1,1) :: ddust_3_r1, ddust_3_out
   REAL*8, DIMENSION (1,1,kte-kts+1,4) :: sea_salt
   
   INTEGER :: uoc_flag  ! flag for UoC dust schemes
-  REAL :: old3, ratio3
-  REAL, PARAMETER :: tiny = 1.0e-30 
 !
 !   REAL*8, DIMENSION (5), PARAMETER :: den_dust(5)=(/2500.,2650.,2650.,2650.,2650./)
 !   REAL*8, DIMENSION (5), PARAMETER :: reff_dust(5)=(/0.73D-6,1.4D-6,2.4D-6,4.5D-6,8.0D-6/)
@@ -102,7 +113,10 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
             ddust(1,1,kk,3)=chem(i,k,j,p_dust_3)
             ddust(1,1,kk,4)=chem(i,k,j,p_dust_4)
             ddust(1,1,kk,5)=chem(i,k,j,p_dust_5)
-            
+            ! Add tagged species for bin 3
+            ddust_3_r1(1,1,kk,1)=chem(i,k,j,p_dust_3_r1)  
+            ddust_3_out(1,1,kk,1)=chem(i,k,j,p_dust_3_out)  
+
             p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j)
             delz(1,1,kk)=dz8w(i,kte-k+kts,j)                            ! delz(1) = dz8w(kte), delz(lmx)=dz8w(kts)
             airden(1,1,kk)=rho_phy(i,k,j)
@@ -116,13 +130,28 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
        ENDIF
        graset_dust(1,1,:)=0.
        graset_ss(1,1,:)=0.                                           
+       ! Initialize tagged species deposition arrays
+       graset_dust_r1(1,1,:)=0.
+       graset_dust_out(1,1,:)=0.
 
        iseas=0
        idust=1
        CALL settling(1,1,lmx,5,g,dyn_visc,ddust,tmp,p_mid,delz,       &
                      imod,graset_dust,grasetvel_dust, uoc_flag,       & 
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
-          
+       
+       ! ===== ADD SETTLING FOR TAGGED SPECIES =====
+       ! Process dust_3_r1 - using bin 3 properties
+       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_3_r1,tmp,p_mid,delz,  &
+                     imod,graset_dust_r1,grasetvel_dust_r1, uoc_flag, &
+                     den_dust(3:3),reff_dust(3:3),dt,rh,idust,iseas,airden)
+       
+       ! Process dust_3_out - using bin 3 properties
+       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_3_out,tmp,p_mid,delz, &
+                     imod,graset_dust_out,grasetvel_dust_out, uoc_flag, &
+                     den_dust(3:3),reff_dust(3:3),dt,rh,idust,iseas,airden)
+       ! ===========================================
+
        IF (config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) THEN
           kk=1
           do kkk=1,5
@@ -144,18 +173,15 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
              kk = kk+1
              chem(i,k,j,p_dust_1)=ddust(1,1,kk,1)                         ! dust for size bin 1 [ug/kg]
              chem(i,k,j,p_dust_2)=ddust(1,1,kk,2)                         ! ...
-            !  chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)                         ! ...
-
-             ! --- Apply settling to tagged bin-3 tracers using the same fractional change as DUST_3 ---
-             old3 = MAX( chem(i,k,j,p_dust_3), tiny )
-             chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)
-             ratio3 = MAX( chem(i,k,j,p_dust_3) / old3, 0.0 )
-             chem(i,k,j,p_dust_3_r1)  = chem(i,k,j,p_dust_3_r1)  * ratio3
-             chem(i,k,j,p_dust_3_out) = chem(i,k,j,p_dust_3_out) * ratio3
-             
+             chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)                         ! ...
              chem(i,k,j,p_dust_4)=ddust(1,1,kk,4)                         ! ...
              chem(i,k,j,p_dust_5)=ddust(1,1,kk,5)                         ! dust for size bin 5 (dust_opt 3: for all size bins) [ug/kg]
              
+             ! ===== WRITE BACK TAGGED DUST SPECIES =====
+             chem(i,k,j,p_dust_3_r1)=ddust_3_r1(1,1,kk,1)
+             chem(i,k,j,p_dust_3_out)=ddust_3_out(1,1,kk,1)
+             ! ==========================================
+                          
              sea_salt(1,1,kk,1)=chem(i,k,j,p_seas_1)                    ! salt [ug/kg]
              sea_salt(1,1,kk,2)=chem(i,k,j,p_seas_2)
              sea_salt(1,1,kk,3)=chem(i,k,j,p_seas_3)
@@ -175,7 +201,15 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
        setvel_3(i,j)=grasetvel_dust(1,1,3)
        setvel_4(i,j)=grasetvel_dust(1,1,4)
        setvel_5(i,j)=grasetvel_dust(1,1,5)
-
+       
+       ! ===== ADD TAGGED SPECIES DEPOSITION AND SETTLING VELOCITY =====
+       dustgraset_3_r1(i,j)=dustgraset_3_r1(i,j)+conver*graset_dust_r1(1,1,1)*airden(1,1,1)*dt
+       dustgraset_3_out(i,j)=dustgraset_3_out(i,j)+conver*graset_dust_out(1,1,1)*airden(1,1,1)*dt
+         
+       setvel_3_r1(i,j)=grasetvel_dust_r1(1,1,1)
+       setvel_3_out(i,j)=grasetvel_dust_out(1,1,1)
+       ! =============================================================
+        
        iseas=1
        idust=0
 

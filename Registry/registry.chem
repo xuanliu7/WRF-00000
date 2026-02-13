@@ -208,37 +208,51 @@ state    real  dustload_2    ij       misc         1         -       r      "dus
 state    real  dustload_3    ij       misc         1         -       r      "dustload_3"     "dust loading for size 3"        "ug/m2"
 state    real  dustload_4    ij       misc         1         -       r      "dustload_4"     "dust loading for size 4"        "ug/m2"
 state    real  dustload_5    ij       misc         1         -       r      "dustload_5"     "dust loading for size 5"        "ug/m2"
+state    real  dustload_3_r1    ij       misc        1    -     r    "dustload_3_r1"  "dust loading for size 3 from tagged R1"     "ug/m2"
+state    real  dustload_3_out   ij       misc        1    -     r    "dustload_3_out" "dust loading for size 3 from tagged OUT"    "ug/m2"
 state    real  depvelocity   ij       misc         1         -       rh      "drydepvel"    "dust dry deposition velocity "         "m/s"
 state    real  setvel_1      ij       misc         1         -       r      "setvel_1"     "dust gravitational settling velocity for size 1"    "m/s"
 state    real  setvel_2      ij       misc         1         -       r      "setvel_2"     "dust gravitational settling velocity for size 2"    "m/s"
 state    real  setvel_3      ij       misc         1         -       r      "setvel_3"     "dust gravitational settling velocity for size 3"    "m/s"
 state    real  setvel_4      ij       misc         1         -       r      "setvel_4"     "dust gravitational settling velocity for size 4"    "m/s"
 state    real  setvel_5      ij       misc         1         -       r      "setvel_5"     "dust gravitational settling velocity for size 5"    "m/s"
+state    real  setvel_3_r1      ij       misc        1    -     r    "setvel_3_r1"    "dust gravitational settling velocity for size 3 from tagged R1"  "m/s"
+state    real  setvel_3_out     ij       misc        1    -     r    "setvel_3_out"   "dust gravitational settling velocity for size 3 from tagged OUT" "m/s"
 state    real  dustgraset_1  ij       misc         1         -       r      "graset_1"     "Accumulated dust gravitational settling  for size 1"        "kg/m2"
 state    real  dustgraset_2  ij       misc         1         -       r      "graset_2"     "Accumulated dust gravitational settling  for size 2"        "kg/m2"
 state    real  dustgraset_3  ij       misc         1         -       r      "graset_3"     "Accumulated dust gravitational settling  for size 3"        "kg/m2"
 state    real  dustgraset_4  ij       misc         1         -       r      "graset_4"     "Accumulated dust gravitational settling  for size 4"        "kg/m2"
 state    real  dustgraset_5  ij       misc         1         -       r      "graset_5"     "Accumulated dust gravitational settling  for size 5"        "kg/m2"
+state    real  dustgraset_3_r1  ij       misc        1    -     r    "graset_3_r1"    "Accumulated dust gravitational settling  for size 3 from tagged R1"  "kg/m2"
+state    real  dustgraset_3_out ij       misc        1    -     r    "graset_3_out"   "Accumulated dust gravitational settling  for size 3 from tagged OUT" "kg/m2"
 state    real  dustdrydep_1   ij      misc        1         -       r      "drydep_1"     "Accumulated dust dry deposition for size 1"        "kg/m2"
 state    real  dustdrydep_2   ij      misc        1         -       r      "drydep_2"     "Accumulated dust dry deposition for size 2"        "kg/m2"
 state    real  dustdrydep_3   ij      misc        1         -       r      "drydep_3"     "Accumulated dust dry deposition for size 3"        "kg/m2"
 state    real  dustdrydep_4   ij      misc        1         -       r      "drydep_4"     "Accumulated dust dry deposition for size 4"        "kg/m2"
 state    real  dustdrydep_5   ij      misc        1         -       r      "drydep_5"     "Accumulated dust dry deposition for size 5"        "kg/m2"
+state    real  dustdrydep_3_r1  ij       misc        1    -     r    "drydep_3_r1"    "Accumulated dust dry deposition for size 3 from tagged R1"  "kg/m2"
+state    real  dustdrydep_3_out ij       misc        1    -     r    "drydep_3_out"   "Accumulated dust dry deposition for size 3 from tagged OUT" "kg/m2"
 state    real  dustwd_1       ikj      misc        1         -      r       "dustwd_1"       "dust loss by wet deposition for size 1"        "ug/kg-dryair"
 state    real  dustwd_2       ikj      misc        1         -      r       "dustwd_2"       "dust loss by wet deposition for size 2"        "ug/kg-dryair"
 state    real  dustwd_3       ikj      misc        1         -      r       "dustwd_3"       "dust loss by wet deposition for size 3"        "ug/kg-dryair"
 state    real  dustwd_4       ikj      misc        1         -      r       "dustwd_4"       "dust loss by wet deposition for size 4"        "ug/kg-dryair"
 state    real  dustwd_5       ikj      misc        1         -      r       "dustwd_5"       "dust loss by wet deposition for size 5"             "ug/kg-dryair"
+state    real  dustwd_3_r1      ikj       misc       1    -     r    "dustwd_3_r1"    "dust loss by wet deposition for size 3 from tagged R1"  "ug/kg-dryair"
+state    real  dustwd_3_out     ikj       misc       1    -     r    "dustwd_3_out"   "dust loss by wet deposition for size 3 from tagged OUT" "ug/kg-dryair"
 state    real  wetdep_1       ij      misc        1         -      r       "wetdep_1"       "dust wet deposition for size 1"        "ug/m2/s"
 state    real  wetdep_2       ij      misc        1         -      r       "wetdep_2"       "dust wet deposition for size 2"        "ug/m2/s"
 state    real  wetdep_3       ij      misc        1         -      r       "wetdep_3"       "dust wet deposition for size 3"        "ug/m2/s"
 state    real  wetdep_4       ij      misc        1         -      r       "wetdep_4"       "dust wet deposition for size 4"        "ug/m2/s"
 state    real  wetdep_5       ij      misc        1         -      r       "wetdep_5"       "dust wet deposition for size 5"        "ug/m2/s"
+state    real  wetdep_3_r1      ij        misc       1    -     r    "wetdep_3_r1"    "dust wet deposition for size 3 from tagged R1"  "ug/m2/s"
+state    real  wetdep_3_out     ij        misc       1    -     r    "wetdep_3_out"   "dust wet deposition for size 3 from tagged OUT" "ug/m2/s"
 state    real  dustwdload_1    ij       misc        1         -      r       "dustwdload_1"   "dustload loss by wet deposition for size 1"      "ug/m2"
 state    real  dustwdload_2    ij       misc        1         -      r       "dustwdload_2"   "dustload loss by wet deposition for size 2"      "ug/m2"
 state    real  dustwdload_3    ij       misc        1         -      r       "dustwdload_3"   "dustload loss by wet deposition for size 3"      "ug/m2"
 state    real  dustwdload_4    ij       misc        1         -      r       "dustwdload_4"   "dustload loss by wet deposition for size 4"      "ug/m2"
 state    real  dustwdload_5    ij       misc        1         -      r       "dustwdload_5"   "dustload loss by wet deposition for size 5"      "ug/m2"
+state    real  dustwdload_3_r1  ij        misc       1    -     r    "dustwdload_3_r1" "dustload loss by wet deposition for size 3 from tagged R1"  "ug/m2"
+state    real  dustwdload_3_out ij        misc       1    -     r    "dustwdload_3_out" "dustload loss by wet deposition for size 3 from tagged OUT" "ug/m2"
 #SAPRCNOV additional emissions, automatically created using diff_mechEmiss_wrfRegistry.m script (pablo-saide@uiowa.edu)
 state   real    e_c2h2          i+jf    emis_ant        1       Z       i5r      "E_C2H2"        "C2H2 emissions"        "mol km^-2 hr^-1"
 state   real    e_alk3          i+jf    emis_ant        1       Z       i5r      "E_ALK3"        "ALK3 emissions"        "mol km^-2 hr^-1"
@@ -314,11 +328,15 @@ state    real  e_hum          i+jf     emis_ant     1         Z      i5     "E_H
 
 # dust and seas emission arrays
 state   real     -          i{dust}jf      emis_dust      -        -        -         -                    "Dust Emissions"         ""
-state    real  edust1       i{dust}jf      emis_dust      1         Z      -     "EDUST1"         "Accumulated DUST emissions bin1"  "kg/m2"
-state    real  edust2       i{dust}jf      emis_dust      1         Z      -     "EDUST2"         "Accumulated DUST emissions bin2"  "kg/m2"
-state    real  edust3       i{dust}jf      emis_dust      1         Z      -     "EDUST3"         "Accumulated DUST emissions bin3"  "kg/m2"
-state    real  edust4       i{dust}jf      emis_dust      1         Z      -     "EDUST4"         "Accumulated DUST emissions bin4"  "kg/m2"
-state    real  edust5       i{dust}jf      emis_dust      1         Z      -     "EDUST5"         "Accumulated DUST emissions bin5"  "kg/m2"
+state    real  edust1       i{dust}jf      emis_dust      1         Z      h     "EDUST1"         "Accumulated DUST emissions bin1"  "kg/m2"
+state    real  edust2       i{dust}jf      emis_dust      1         Z      h     "EDUST2"         "Accumulated DUST emissions bin2"  "kg/m2"
+state    real  edust3       i{dust}jf      emis_dust      1         Z      h     "EDUST3"         "Accumulated DUST emissions bin3"  "kg/m2"
+state    real  edust4       i{dust}jf      emis_dust      1         Z      h     "EDUST4"         "Accumulated DUST emissions bin4"  "kg/m2"
+state    real  edust5       i{dust}jf      emis_dust      1         Z      h     "EDUST5"         "Accumulated DUST emissions bin5"  "kg/m2"
+# ===== ADD TAGGED DUST EMISSIONS FOR BIN 3 =====
+state    real  edust3_r1    i{dust}jf      emis_dust      1         Z      h     "EDUST3_R1"      "Accumulated DUST emissions bin3 R1 tagged"  "kg/m2"
+state    real  edust3_out   i{dust}jf      emis_dust      1         Z      h     "EDUST3_OUT"     "Accumulated DUST emissions bin3 OUT tagged"  "kg/m2"
+# ==============================================
 state   real     -          i{dust}jf      emis_seas      -        -        -         -                    "Sea-Salt Emissions"         ""
 state    real  eseas1       i{dust}jf      emis_seas      1         Z      -     "ESEAS1"         "Sea-Salt emissions bin1 "  ""
 state    real  eseas2       i{dust}jf      emis_seas      1         Z      -     "ESEAS2"         "Sea-Salt emissions bin2 "  ""
@@ -3616,10 +3634,10 @@ state   real   p10        ikjftb   chem       1         -   i0{12}rhusdf=(bdy_in
 state   real   dust_1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_1"    "dust size bin 1: 0.5um effective radius"     "ug/kg-dryair"
 state   real   dust_2       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_2"    "dust size bin 2: 1.4um effective radius"     "ug/kg-dryair "
 state   real   dust_3       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3"    "dust size bin 3: 2.4um effective radius"     "ug/kg-dryair "
-state   real   dust_3_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_R1"    "dust size bin 3 region 1: 2.4um effective radius"     "ug/kg-dryair "
-state   real   dust_3_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_OUT"    "dust size bin 3 outside: 2.4um effective radius"     "ug/kg-dryair "
 state   real   dust_4       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_4"    "dust size bin 4: 4.5um effective radius"     "ug/kg-dryair "
 state   real   dust_5       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_5"    "dust size bin 5: 8.0um effective radius"     "ug/kg-dryair"
+state   real   dust_3_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_R1"    "dust size bin 3 region 1: 2.4um effective radius"     "ug/kg-dryair "
+state   real   dust_3_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_OUT"    "dust size bin 3 outside: 2.4um effective radius"     "ug/kg-dryair "
 state   real   seas_1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "SEAS_1"    "sea-salt size bin 1: 0.3um effective radius"     "ug/kg-dryair"
 state   real   seas_2       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "SEAS_2"    "sea-salt size bin 2: 1.0um effective radius"     "ug/kg-dryair"
 state   real   seas_3       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "SEAS_3"    "sea-salt size bin 3: 3.2um effective radius"     "ug/kg-dryair"
@@ -4021,7 +4039,7 @@ package saprc99_mosaic_8bin_vbs2_kpp    chem_opt==204   -       chem:o3,h2o2,no,
 package   nmhc9_kpp     chem_opt==200                   -             chem:o3,h2o2,ch4,op1,hcho,ch3oh,co,hno3,no3,n2o5,hno4,no,no2,isopr,mvk,iso2,isooh,mvko2,mvkooh,ison,aca,acol,hcooh,mpan,naca,pan,pa,paa,mglo,c2h6,eTooh,ald,c3h8,pRooh,acet,acooh,eTo2,pRo2,aco2,c3h6,c3h6ooh,c2h4,c4h10,buooh,mek,mekooh,mEcoco,c3h6o2,c4h9o2,meko2,onit,pRono2,ch3o2,acetol,acetp,aceto2,ch3cooh,c4h9ooh,mEoh,ho,ho2,mEo2,mEo2no2
 
 # GOCART Packages (no Ozone chemistry in this choice)
-package   gocart_simple     chem_opt==300                   -             chem:so2,sulf,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_3_r1,dust_3_out,dust_4,dust_5,seas_1,seas_2,seas_3,seas_4,p10
+package   gocart_simple     chem_opt==300                   -             chem:so2,sulf,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,dust_3_r1,dust_3_out,seas_1,seas_2,seas_3,seas_4,p10
 
 package   gocartracm_kpp     chem_opt==301                   -             chem:so2,sulf,no2,no,o3,hno3,h2o2,ald,hcho,op1,op2,paa,ora1,ora2,nh3,n2o5,no3,pan,hc3,hc5,hc8,eth,co,ete,olt,oli,tol,xyl,aco3,tpan,hono,hno4,ket,gly,mgly,dcb,onit,csl,iso,co2,ch4,udd,hket,api,lim,dien,macr,ho,ho2,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,seas_1,seas_2,seas_3,seas_4,p10
 
@@ -4127,7 +4145,7 @@ package   opt_out      opt_pars_out==1             -          ext_coef:extcof3,e
 
 # dust and sea salt packages
 package   dustgocart    dust_opt==1                  -              emis_dust:edust1,edust2,edust3,edust4,edust5 
-package   dustgocartafwa   dust_opt==3               -              emis_dust:edust1,edust2,edust3,edust4,edust5;state:afwa_dustloft,tot_dust,tot_edust,vis_dust
+package   dustgocartafwa   dust_opt==3               -              emis_dust:edust1,edust2,edust3,edust4,edust5,edust3_r1,edust3_out;state:afwa_dustloft,tot_dust,tot_edust,vis_dust
 package   dustuoc       dust_opt==4                  -              emis_dust:edust1,edust2,edust3,edust4,edust5
 package   shao_2001     dust_schme==1                -              emis_dust:edust1,edust2,edust3,edust4,edust5
 package   shao_2004     dust_schme==2                -              emis_dust:edust1,edust2,edust3,edust4,edust5
