@@ -831,7 +831,7 @@
               grid%ust,grid%znt,grid%dms_0,grid%erup_beg,grid%erup_end,                    &
               grid%xland,grid%xlat,grid%xlong,                                             &
               z_at_w,zmid,grid%smois,dustin,seasin,                                        &
-              grid%srcmask_r1, grid%srcmask_out,                                           &
+              grid%srcmask_r1, grid%srcmask_out,                                           & ! NEW: added masks
               grid%sebio_iso,grid%sebio_oli,grid%sebio_api,grid%sebio_lim,                 &
               grid%sebio_xyl,grid%sebio_hc3,grid%sebio_ete,grid%sebio_olt,                 &
               grid%sebio_ket,grid%sebio_ald,grid%sebio_hcho,grid%sebio_eth,                &
@@ -1061,12 +1061,14 @@
                  emis_ant,ebu_in,                                                     &
                  config_flags%sf_urban_physics,numgas,current_month,dvel,grid%snowh,  &
                  grid%dustdrydep_1,grid%dustdrydep_2,grid%dustdrydep_3,               &
-                 grid%dustdrydep_4,grid%dustdrydep_5,                                 &      
+                 grid%dustdrydep_4,grid%dustdrydep_5,                                 &
+                 grid%dustdrydep_3_r1, grid%dustdrydep_3_out,                         &  ! NEW: added for tagged species
                  grid%depvelocity,                                                    &      
                  grid%dustgraset_1,grid%dustgraset_2,grid%dustgraset_3,               &
                  grid%dustgraset_4,grid%dustgraset_5,                                 &
+                 grid%dustgraset_3_r1, grid%dustgraset_3_out,                         &  ! NEW: added for tagged species
                  grid%setvel_1,grid%setvel_2,grid%setvel_3,grid%setvel_4,             &
-                 grid%setvel_5, imod,                                                 &                  
+                 grid%setvel_5, grid%setvel_3_r1, grid%setvel_3_out, grid%imod,       &  ! NEW: added for tagged species
                  grid%is_CAMMGMP_used,                                                &
                  grid%dep_vel,grid%num_vert_mix,                                      &
                  ids,ide, jds,jde, kds,kde,                                           &
@@ -1750,6 +1752,7 @@ end if !Chemistry time step check
      call dust_load_driver ( config_flags,                                            &
            rri, chem, dz8w, grid%dustload_1, grid%dustload_2, grid%dustload_3,        &
            grid%dustload_4, grid%dustload_5,                                          &
+           grid%dustload_3_r1, grid%dustload_3_out,                                   & ! NEW: added for tagged species
            ids,ide, jds,jde, kds,kde,                                                 &
            ims,ime, jms,jme, kms,kme,                                                 &
            its,ite, jts,jte, kts, kte                                                 )

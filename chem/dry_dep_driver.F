@@ -25,6 +25,7 @@ CONTAINS
                sf_urban_physics,numgas,current_month,dvel,snowh,          & 
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
+               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &               
                dustgraset_1,dustgraset_2,dustgraset_3,                    &
                dustgraset_4,dustgraset_5,                                 &
@@ -297,6 +298,7 @@ CONTAINS
                   ivgtyp, tsk, vegfra, pbl, ust, znt, xlat, xlong,        &
                   dustdrydep_1,dustdrydep_2,dustdrydep_3,                 &
                   dustdrydep_4,dustdrydep_5,                              &
+                  dustdrydep_3_r1, dustdrydep_3_out,                      &  ! NEW: added for tagged species
                   depvelocity,                                            &                       
                   ids,ide, jds,jde, kds,kde,                              &
                   ims,ime, jms,jme, kms,kme,                              &
@@ -401,6 +403,7 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,                  &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
+               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &                    
                ids,ide, jds,jde, kds,kde,                                 &
                ims,ime, jms,jme, kms,kme,                                 &
@@ -416,6 +419,7 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,                  &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
+               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &                    
                ids,ide, jds,jde, kds,kde,                                 &
                ims,ime, jms,jme, kms,kme,                                 &
@@ -442,6 +446,7 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,                  &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
+               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &                    
                ids,ide, jds,jde, kds,kde,                                 &
                ims,ime, jms,jme, kms,kme,                                 &

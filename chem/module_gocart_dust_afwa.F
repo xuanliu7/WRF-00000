@@ -350,6 +350,9 @@ CONTAINS
      emis_dust(i,1,j,p_edust4)=emis_dust(i,1,j,p_edust4)+bems(4)
      emis_dust(i,1,j,p_edust5)=emis_dust(i,1,j,p_edust5)+bems(5)
 
+     ! Source-tagged emission diagnostics
+     emis_dust(i,1,j,p_edust3_r1) = emis_dust(i,1,j,p_edust3_r1) + bems(3) * m_r1
+     emis_dust(i,1,j,p_edust3_out) = emis_dust(i,1,j,p_edust3_out) + bems(3) * m_out
 
      ! Diagnostic accumulated total emitted dust (kg/m2)
      tot_edust(i,j)=tot_edust(i,j)+(bems(1)+bems(2)+bems(3)+bems(4)+bems(5))
