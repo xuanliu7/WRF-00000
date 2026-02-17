@@ -1068,7 +1068,7 @@
                  grid%dustgraset_4,grid%dustgraset_5,                                 &
                  grid%dustgraset_3_r1, grid%dustgraset_3_out,                         &  ! NEW: added for tagged species
                  grid%setvel_1,grid%setvel_2,grid%setvel_3,grid%setvel_4,             &
-                 grid%setvel_5, grid%setvel_3_r1, grid%setvel_3_out, grid%imod,       &  ! NEW: added for tagged species
+                 grid%setvel_5, grid%setvel_3_r1, grid%setvel_3_out, imod,            &  ! NEW: added for tagged species
                  grid%is_CAMMGMP_used,                                                &
                  grid%dep_vel,grid%num_vert_mix,                                      &
                  ids,ide, jds,jde, kds,kde,                                           &

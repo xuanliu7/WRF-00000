@@ -54,7 +54,7 @@ CONTAINS
          INTENT(IN)         ::                       aer_res
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) ::        &
                 dustdrydep_1, dustdrydep_2, dustdrydep_3,       &
-                dustdrydep_4, dustdrydep_5, 
+                dustdrydep_4, dustdrydep_5,                      &
                 dustdrydep_3_r1, dustdrydep_3_out,              &  ! NEW: added for tagged species
                 depvelocity                 
 
