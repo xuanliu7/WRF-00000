@@ -46,16 +46,16 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
 
   REAL*8,  DIMENSION (1,1,5)          :: graset_dust,grasetvel_dust 
   ! Add tagged species deposition and velocity arrays
-  REAL*8,  DIMENSION (1,1,1)          :: graset_dust_r1, grasetvel_dust_r1
-  REAL*8,  DIMENSION (1,1,1)          :: graset_dust_out, grasetvel_dust_out
+  REAL*8,  DIMENSION (1,1,5)          :: graset_dust_r1, grasetvel_dust_r1
+  REAL*8,  DIMENSION (1,1,5)          :: graset_dust_out, grasetvel_dust_out
   REAL*8,  DIMENSION (1,1,4)          :: graset_ss,grasetvel_ss
 
   REAL, INTENT(IN) :: dt,dx,g
   INTEGER          :: kkk,nmx,i,j,k,kk,lmx,iseas,idust
   REAL*8, DIMENSION (1,1,kte-kts+1)   :: tmp,airden,p_mid,delz,rh
   REAL*8, DIMENSION (1,1,kte-kts+1,5) :: ddust
-  ! Add arrays for tagged dust species (single bin each)
-  REAL*8, DIMENSION (1,1,kte-kts+1,1) :: ddust_3_r1, ddust_3_out
+  ! Add arrays for tagged dust species
+  REAL*8, DIMENSION (1,1,kte-kts+1,5) :: ddust_r1, ddust_out
   REAL*8, DIMENSION (1,1,kte-kts+1,4) :: sea_salt
   
   INTEGER :: uoc_flag  ! flag for UoC dust schemes
@@ -105,9 +105,17 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
             ddust(1,1,kk,3)=chem(i,k,j,p_dust_3)
             ddust(1,1,kk,4)=chem(i,k,j,p_dust_4)
             ddust(1,1,kk,5)=chem(i,k,j,p_dust_5)
-            ! Add tagged species for bin 3
-            ddust_3_r1(1,1,kk,1)=chem(i,k,j,p_dust_3_r1)  
-            ddust_3_out(1,1,kk,1)=chem(i,k,j,p_dust_3_out)  
+            ! Add tagged dust species
+            ddust_r1(1,1,kk,1)=chem(i,k,j,p_dust_1_r1)
+            ddust_r1(1,1,kk,2)=chem(i,k,j,p_dust_2_r1)   
+            ddust_r1(1,1,kk,3)=chem(i,k,j,p_dust_3_r1)
+            ddust_r1(1,1,kk,4)=chem(i,k,j,p_dust_4_r1)
+            ddust_r1(1,1,kk,5)=chem(i,k,j,p_dust_5_r1)
+            ddust_out(1,1,kk,1)=chem(i,k,j,p_dust_1_out)
+            ddust_out(1,1,kk,2)=chem(i,k,j,p_dust_2_out)  
+            ddust_out(1,1,kk,3)=chem(i,k,j,p_dust_3_out) 
+            ddust_out(1,1,kk,4)=chem(i,k,j,p_dust_4_out)
+            ddust_out(1,1,kk,5)=chem(i,k,j,p_dust_5_out) 
 
             p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j)
             delz(1,1,kk)=dz8w(i,kte-k+kts,j)                            ! delz(1) = dz8w(kte), delz(lmx)=dz8w(kts)
@@ -133,15 +141,13 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
        
        ! ===== ADD SETTLING FOR TAGGED SPECIES =====
-       ! Process dust_3_r1 - using bin 3 properties
-       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_3_r1,tmp,p_mid,delz,  &
+       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_r1,tmp,p_mid,delz,  &
                      imod,graset_dust_r1,grasetvel_dust_r1, uoc_flag, &
-                     den_dust(3:3),reff_dust(3:3),dt,rh,idust,iseas,airden)
+                     den_dust,reff_dust,dt,rh,idust,iseas,airden)
        
-       ! Process dust_3_out - using bin 3 properties
-       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_3_out,tmp,p_mid,delz, &
+       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
                      imod,graset_dust_out,grasetvel_dust_out, uoc_flag, &
-                     den_dust(3:3),reff_dust(3:3),dt,rh,idust,iseas,airden)
+                     den_dust,reff_dust,dt,rh,idust,iseas,airden)
        ! ===========================================
 
        IF (config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) THEN
@@ -170,8 +176,16 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
              chem(i,k,j,p_dust_5)=ddust(1,1,kk,5)                         ! dust for size bin 5 (dust_opt 3: for all size bins) [ug/kg]
              
              ! ===== WRITE BACK TAGGED DUST SPECIES =====
-             chem(i,k,j,p_dust_3_r1)=ddust_3_r1(1,1,kk,1)
-             chem(i,k,j,p_dust_3_out)=ddust_3_out(1,1,kk,1)
+             chem(i,k,j,p_dust_1_r1)=ddust_r1(1,1,kk,1)
+             chem(i,k,j,p_dust_2_r1)=ddust_r1(1,1,kk,2)
+             chem(i,k,j,p_dust_3_r1)=ddust_r1(1,1,kk,3)
+             chem(i,k,j,p_dust_4_r1)=ddust_r1(1,1,kk,4)
+             chem(i,k,j,p_dust_5_r1)=ddust_r1(1,1,kk,5)
+             chem(i,k,j,p_dust_1_out)=ddust_out(1,1,kk,1)
+             chem(i,k,j,p_dust_2_out)=ddust_out(1,1,kk,2)
+             chem(i,k,j,p_dust_3_out)=ddust_out(1,1,kk,3)
+             chem(i,k,j,p_dust_4_out)=ddust_out(1,1,kk,4)
+             chem(i,k,j,p_dust_5_out)=ddust_out(1,1,kk,5)
              ! ==========================================
                           
              sea_salt(1,1,kk,1)=chem(i,k,j,p_seas_1)                    ! salt [ug/kg]

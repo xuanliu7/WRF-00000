@@ -92,7 +92,7 @@ CONTAINS
   REAL, INTENT(IN   ) :: alpha, gamma, smtune, ustune
   INTEGER :: smois_opt
   real    :: dz_lowest
-  REAL :: m_r1, m_out, d3_inc
+  REAL :: m_r1, m_out, d1_inc, d2_inc, d3_inc, d4_inc, d5_inc
 
   conver=1.e-9
   converi=1.e9
@@ -294,15 +294,26 @@ CONTAINS
                        erodtot, ilwi, gravsm, volsm, airden,dz_lowest,   &
                        bems, ustart, g, drylimit, alpha, gamma, smois_opt)
 
-      ! --- Tag ONLY bin 3 emissions into DUST_3_R1 and DUST_3_OUT ---
-      ! bems(3) is emitted mass for bin 3: (kg/m2) per dt
-      ! Convert to mixing ratio increment and then to ug/kg using converi.
+      ! --- Tag dust emissions ---
+      ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
       m_r1  = MAX(0.0, MIN(1.0, srcmask_r1(i,j)))
       m_out = MAX(0.0, MIN(1.0, srcmask_out(i,j)))
+      d1_inc = REAL( bems(1) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
+      d2_inc = REAL( bems(2) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
       d3_inc = REAL( bems(3) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
+      d4_inc = REAL( bems(4) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
+      d5_inc = REAL( bems(5) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
+      chem(i,kts,j,p_dust_1_r1)  = chem(i,kts,j,p_dust_1_r1)  + d1_inc * m_r1
+      chem(i,kts,j,p_dust_2_r1)  = chem(i,kts,j,p_dust_2_r1)  + d2_inc * m_r1
       chem(i,kts,j,p_dust_3_r1)  = chem(i,kts,j,p_dust_3_r1)  + d3_inc * m_r1
-      chem(i,kts,j,p_dust_3_out) = chem(i,kts,j,p_dust_3_out) + d3_inc * m_out   
-      
+      chem(i,kts,j,p_dust_4_r1)  = chem(i,kts,j,p_dust_4_r1)  + d4_inc * m_r1
+      chem(i,kts,j,p_dust_5_r1)  = chem(i,kts,j,p_dust_5_r1)  + d5_inc * m_r1
+      chem(i,kts,j,p_dust_1_out) = chem(i,kts,j,p_dust_1_out) + d1_inc * m_out
+      chem(i,kts,j,p_dust_2_out) = chem(i,kts,j,p_dust_2_out) + d2_inc * m_out
+      chem(i,kts,j,p_dust_3_out) = chem(i,kts,j,p_dust_3_out) + d3_inc * m_out
+      chem(i,kts,j,p_dust_4_out) = chem(i,kts,j,p_dust_4_out) + d4_inc * m_out
+      chem(i,kts,j,p_dust_5_out) = chem(i,kts,j,p_dust_5_out) + d5_inc * m_out
+
       IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
         dustin(i,j,1:5)=tc(1:5)*converi
       ELSE IF(config_flags%chem_opt == CB05_SORG_AQ_KPP .or.  &
@@ -351,8 +362,16 @@ CONTAINS
      emis_dust(i,1,j,p_edust5)=emis_dust(i,1,j,p_edust5)+bems(5)
 
      ! Source-tagged emission diagnostics
+     emis_dust(i,1,j,p_edust1_r1) = emis_dust(i,1,j,p_edust1_r1) + bems(1) * m_r1
+     emis_dust(i,1,j,p_edust2_r1) = emis_dust(i,1,j,p_edust2_r1) + bems(2) * m_r1
      emis_dust(i,1,j,p_edust3_r1) = emis_dust(i,1,j,p_edust3_r1) + bems(3) * m_r1
+     emis_dust(i,1,j,p_edust4_r1) = emis_dust(i,1,j,p_edust4_r1) + bems(4) * m_r1
+     emis_dust(i,1,j,p_edust5_r1) = emis_dust(i,1,j,p_edust5_r1) + bems(5) * m_r1
+     emis_dust(i,1,j,p_edust1_out) = emis_dust(i,1,j,p_edust1_out) + bems(1) * m_out
+     emis_dust(i,1,j,p_edust2_out) = emis_dust(i,1,j,p_edust2_out) + bems(2) * m_out
      emis_dust(i,1,j,p_edust3_out) = emis_dust(i,1,j,p_edust3_out) + bems(3) * m_out
+     emis_dust(i,1,j,p_edust4_out) = emis_dust(i,1,j,p_edust4_out) + bems(4) * m_out
+     emis_dust(i,1,j,p_edust5_out) = emis_dust(i,1,j,p_edust5_out) + bems(5) * m_out
 
      ! Diagnostic accumulated total emitted dust (kg/m2)
      tot_edust(i,j)=tot_edust(i,j)+(bems(1)+bems(2)+bems(3)+bems(4)+bems(5))
