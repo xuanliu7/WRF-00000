@@ -14,11 +14,7 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
            dustin,seasin,dx,g,                                      &
            dustgraset_1,dustgraset_2,dustgraset_3,                  & 
            dustgraset_4,dustgraset_5,                               & 
-           ! Add tagged species deposition arrays
-           dustgraset_3_r1, dustgraset_3_out,                       &
-           setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,            & 
-           ! Add tagged species settling velocity arrays
-           setvel_3_r1, setvel_3_out, imod,                         &
+           setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,imod,       & 
            ids,ide,jds,jde,kds,kde,                                 &
            ims,ime,jms,jme,kms,kme,                                 &
            its,ite,jts,jte,kts,kte)
@@ -47,10 +43,6 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
         dustgraset_1,dustgraset_2,dustgraset_3,                      &
         dustgraset_4,dustgraset_5,                                   &
         setvel_1,setvel_2,setvel_3,setvel_4,setvel_5 
-  ! Add tagged species arrays
-  REAL, DIMENSION(ims:ime,jms:jme), INTENT(INOUT)::                  &
-        dustgraset_3_r1, dustgraset_3_out,                           &
-        setvel_3_r1, setvel_3_out
 
   REAL*8,  DIMENSION (1,1,5)          :: graset_dust,grasetvel_dust 
   ! Add tagged species deposition and velocity arrays
@@ -202,14 +194,6 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
        setvel_4(i,j)=grasetvel_dust(1,1,4)
        setvel_5(i,j)=grasetvel_dust(1,1,5)
        
-       ! ===== ADD TAGGED SPECIES DEPOSITION AND SETTLING VELOCITY =====
-       dustgraset_3_r1(i,j)=dustgraset_3_r1(i,j)+conver*graset_dust_r1(1,1,1)*airden(1,1,1)*dt
-       dustgraset_3_out(i,j)=dustgraset_3_out(i,j)+conver*graset_dust_out(1,1,1)*airden(1,1,1)*dt
-         
-       setvel_3_r1(i,j)=grasetvel_dust_r1(1,1,1)
-       setvel_3_out(i,j)=grasetvel_dust_out(1,1,1)
-       ! =============================================================
-        
        iseas=1
        idust=0
 

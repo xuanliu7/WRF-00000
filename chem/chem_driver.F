@@ -1062,13 +1062,11 @@
                  config_flags%sf_urban_physics,numgas,current_month,dvel,grid%snowh,  &
                  grid%dustdrydep_1,grid%dustdrydep_2,grid%dustdrydep_3,               &
                  grid%dustdrydep_4,grid%dustdrydep_5,                                 &
-                 grid%dustdrydep_3_r1, grid%dustdrydep_3_out,                         &  ! NEW: added for tagged species
                  grid%depvelocity,                                                    &      
                  grid%dustgraset_1,grid%dustgraset_2,grid%dustgraset_3,               &
                  grid%dustgraset_4,grid%dustgraset_5,                                 &
-                 grid%dustgraset_3_r1, grid%dustgraset_3_out,                         &  ! NEW: added for tagged species
                  grid%setvel_1,grid%setvel_2,grid%setvel_3,grid%setvel_4,             &
-                 grid%setvel_5, grid%setvel_3_r1, grid%setvel_3_out, imod,            &  ! NEW: added for tagged species
+                 grid%setvel_5, imod,                                                 & 
                  grid%is_CAMMGMP_used,                                                &
                  grid%dep_vel,grid%num_vert_mix,                                      &
                  ids,ide, jds,jde, kds,kde,                                           &
@@ -1752,7 +1750,6 @@ end if !Chemistry time step check
      call dust_load_driver ( config_flags,                                            &
            rri, chem, dz8w, grid%dustload_1, grid%dustload_2, grid%dustload_3,        &
            grid%dustload_4, grid%dustload_5,                                          &
-           grid%dustload_3_r1, grid%dustload_3_out,                                   & ! NEW: added for tagged species
            ids,ide, jds,jde, kds,kde,                                                 &
            ims,ime, jms,jme, kms,kme,                                                 &
            its,ite, jts,jte, kts, kte                                                 )

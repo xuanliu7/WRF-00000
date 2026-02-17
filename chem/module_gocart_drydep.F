@@ -9,7 +9,6 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,       &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,         &
                dustdrydep_4,dustdrydep_5,                      &
-               dustdrydep_3_r1, dustdrydep_3_out,              &  ! NEW: added for tagged species
                depvelocity,                                    &                     
                ids,ide, jds,jde, kds,kde,                      &
                ims,ime, jms,jme, kms,kme,                      &
@@ -55,7 +54,6 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) ::        &
                 dustdrydep_1, dustdrydep_2, dustdrydep_3,       &
                 dustdrydep_4, dustdrydep_5,                      &
-                dustdrydep_3_r1, dustdrydep_3_out,              &  ! NEW: added for tagged species
                 depvelocity                 
 
 !! .. Local Scalars ..
@@ -126,9 +124,6 @@ CONTAINS
       dustdrydep_3(i,j)=dustdrydep_3(i,j)+1.e-9*dtstep*dvel(1,1)*chem(i,1,j,p_dust_3)*airden(1,1)
       dustdrydep_4(i,j)=dustdrydep_4(i,j)+1.e-9*dtstep*dvel(1,1)*chem(i,1,j,p_dust_4)*airden(1,1)
       dustdrydep_5(i,j)=dustdrydep_5(i,j)+1.e-9*dtstep*dvel(1,1)*chem(i,1,j,p_dust_5)*airden(1,1)
-      ! NEW: Calculate dry deposition for tagged dust_3 species
-      dustdrydep_3_r1(i,j)=dustdrydep_3_r1(i,j)+1.e-9*dtstep*dvel(1,1)*chem(i,1,j,p_dust_3_r1)*airden(1,1)
-      dustdrydep_3_out(i,j)=dustdrydep_3_out(i,j)+1.e-9*dtstep*dvel(1,1)*chem(i,1,j,p_dust_3_out)*airden(1,1)
 
     enddo
   enddo

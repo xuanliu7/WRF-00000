@@ -25,15 +25,10 @@ CONTAINS
                sf_urban_physics,numgas,current_month,dvel,snowh,          & 
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
-               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &               
                dustgraset_1,dustgraset_2,dustgraset_3,                    &
                dustgraset_4,dustgraset_5,                                 &
-               ! Add tagged species gravitational settling arrays
-               dustgraset_3_r1, dustgraset_3_out,                         &
-               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,              &
-               ! Add tagged species settling velocity arrays
-               setvel_3_r1, setvel_3_out, imod,                           &        
+               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5, imod,        &       
                is_CAMMGMP_used,                                           &
                dep_vel,num_vert_mix,                                      &
                ids,ide, jds,jde, kds,kde,                                 &
@@ -161,11 +156,7 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) ::        &
                dustgraset_1,dustgraset_2,dustgraset_3,          &
                dustgraset_4,dustgraset_5,                       &
-               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5
-   ! Add tagged species arrays
-   REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) ::        &
-               dustgraset_3_r1, dustgraset_3_out,               &
-               setvel_3_r1, setvel_3_out                  
+               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5                 
    INTEGER, INTENT(IN)  ::     imod
    
 !--- deposition and emissions stuff
@@ -298,7 +289,6 @@ CONTAINS
                   ivgtyp, tsk, vegfra, pbl, ust, znt, xlat, xlong,        &
                   dustdrydep_1,dustdrydep_2,dustdrydep_3,                 &
                   dustdrydep_4,dustdrydep_5,                              &
-                  dustdrydep_3_r1, dustdrydep_3_out,                      &  ! NEW: added for tagged species
                   depvelocity,                                            &                       
                   ids,ide, jds,jde, kds,kde,                              &
                   ims,ime, jms,jme, kms,kme,                              &
@@ -403,7 +393,6 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,                  &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
-               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &                    
                ids,ide, jds,jde, kds,kde,                                 &
                ims,ime, jms,jme, kms,kme,                                 &
@@ -419,7 +408,6 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,                  &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
-               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &                    
                ids,ide, jds,jde, kds,kde,                                 &
                ims,ime, jms,jme, kms,kme,                                 &
@@ -446,7 +434,6 @@ CONTAINS
                ivgtyp,tsk,vegfra,pbl,ust,znt,xlat,xlong,                  &
                dustdrydep_1,dustdrydep_2,dustdrydep_3,                    &
                dustdrydep_4,dustdrydep_5,                                 &
-               dustdrydep_3_r1, dustdrydep_3_out,                         &  ! NEW: added for tagged species
                depvelocity,                                               &                    
                ids,ide, jds,jde, kds,kde,                                 &
                ims,ime, jms,jme, kms,kme,                                 &
@@ -1408,11 +1395,7 @@ CONTAINS
          dustin,seasin,dx,g, &
          dustgraset_1,dustgraset_2,dustgraset_3,                           &
          dustgraset_4,dustgraset_5,                                        &
-         ! Add tagged species deposition arrays
-         dustgraset_3_r1, dustgraset_3_out,                                &
-         setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,                     & 
-         ! Add tagged species settling velocity arrays
-         setvel_3_r1, setvel_3_out, imod,                                  &          
+         setvel_1,setvel_2,setvel_3,setvel_4,setvel_5, imod,               &        
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
