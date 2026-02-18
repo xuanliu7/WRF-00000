@@ -141,11 +141,11 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
        
        ! ===== ADD SETTLING FOR TAGGED SPECIES =====
-       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_r1,tmp,p_mid,delz,  &
+       CALL settling(1,1,lmx,5,g,dyn_visc,ddust_r1,tmp,p_mid,delz,  &
                      imod,graset_dust_r1,grasetvel_dust_r1, uoc_flag, &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
        
-       CALL settling(1,1,lmx,1,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
+       CALL settling(1,1,lmx,5,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
                      imod,graset_dust_out,grasetvel_dust_out, uoc_flag, &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
        ! ===========================================

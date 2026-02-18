@@ -321,14 +321,14 @@ state    real  edust4       i{dust}jf      emis_dust      1         Z      h    
 state    real  edust5       i{dust}jf      emis_dust      1         Z      h     "EDUST5"         "Accumulated DUST emissions bin5"  "kg/m2"
 # ===== ADD TAGGED DUST EMISSIONS =====
 state    real  edust1_r1    i{dust}jf      emis_dust      1         Z      h     "EDUST1_R1"      "Accumulated DUST emissions bin1 R1 tagged"  "kg/m2"
-state    real  edust1_out   i{dust}jf      emis_dust      1         Z      h     "EDUST1_OUT"     "Accumulated DUST emissions bin1 OUT tagged"  "kg/m2"
 state    real  edust2_r1    i{dust}jf      emis_dust      1         Z      h     "EDUST2_R1"      "Accumulated DUST emissions bin2 R1 tagged"  "kg/m2"
-state    real  edust2_out   i{dust}jf      emis_dust      1         Z      h     "EDUST2_OUT"     "Accumulated DUST emissions bin2 OUT tagged"  "kg/m2"
 state    real  edust3_r1    i{dust}jf      emis_dust      1         Z      h     "EDUST3_R1"      "Accumulated DUST emissions bin3 R1 tagged"  "kg/m2"
-state    real  edust3_out   i{dust}jf      emis_dust      1         Z      h     "EDUST3_OUT"     "Accumulated DUST emissions bin3 OUT tagged"  "kg/m2"
 state    real  edust4_r1    i{dust}jf      emis_dust      1         Z      h     "EDUST4_R1"      "Accumulated DUST emissions bin4 R1 tagged"  "kg/m2"
-state    real  edust4_out   i{dust}jf      emis_dust      1         Z      h     "EDUST4_OUT"     "Accumulated DUST emissions bin4 OUT tagged"  "kg/m2"
 state    real  edust5_r1    i{dust}jf      emis_dust      1         Z      h     "EDUST5_R1"      "Accumulated DUST emissions bin5 R1 tagged"  "kg/m2"
+state    real  edust1_out   i{dust}jf      emis_dust      1         Z      h     "EDUST1_OUT"     "Accumulated DUST emissions bin1 OUT tagged"  "kg/m2"
+state    real  edust2_out   i{dust}jf      emis_dust      1         Z      h     "EDUST2_OUT"     "Accumulated DUST emissions bin2 OUT tagged"  "kg/m2"
+state    real  edust3_out   i{dust}jf      emis_dust      1         Z      h     "EDUST3_OUT"     "Accumulated DUST emissions bin3 OUT tagged"  "kg/m2"
+state    real  edust4_out   i{dust}jf      emis_dust      1         Z      h     "EDUST4_OUT"     "Accumulated DUST emissions bin4 OUT tagged"  "kg/m2"
 state    real  edust5_out   i{dust}jf      emis_dust      1         Z      h     "EDUST5_OUT"     "Accumulated DUST emissions bin5 OUT tagged"  "kg/m2"
 # ==============================================
 state   real     -          i{dust}jf      emis_seas      -        -        -         -                    "Sea-Salt Emissions"         ""
@@ -3631,14 +3631,14 @@ state   real   dust_3       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_
 state   real   dust_4       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_4"    "dust size bin 4: 4.5um effective radius"     "ug/kg-dryair "
 state   real   dust_5       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_5"    "dust size bin 5: 8.0um effective radius"     "ug/kg-dryair"
 state   real   dust_1_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_1_R1"    "dust size bin 1 region 1: 0.5um effective radius"     "ug/kg-dryair "
-state   real   dust_1_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_1_OUT"    "dust size bin 1 outside: 0.5um effective radius"     "ug/kg-dryair "
 state   real   dust_2_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_2_R1"    "dust size bin 2 region 1: 1.4um effective radius"     "ug/kg-dryair "
-state   real   dust_2_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_2_OUT"    "dust size bin 2 outside: 1.4um effective radius"     "ug/kg-dryair "
 state   real   dust_3_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_R1"    "dust size bin 3 region 1: 2.4um effective radius"     "ug/kg-dryair "
-state   real   dust_3_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_OUT"    "dust size bin 3 outside: 2.4um effective radius"     "ug/kg-dryair "
 state   real   dust_4_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_4_R1"    "dust size bin 4 region 1: 4.5um effective radius"     "ug/kg-dryair "
-state   real   dust_4_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_4_OUT"    "dust size bin 4 outside: 4.5um effective radius"     "ug/kg-dryair "
 state   real   dust_5_r1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_5_R1"    "dust size bin 5 region 1: 8.0um effective radius"     "ug/kg-dryair "
+state   real   dust_1_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_1_OUT"    "dust size bin 1 outside: 0.5um effective radius"     "ug/kg-dryair "
+state   real   dust_2_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_2_OUT"    "dust size bin 2 outside: 1.4um effective radius"     "ug/kg-dryair "
+state   real   dust_3_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_3_OUT"    "dust size bin 3 outside: 2.4um effective radius"     "ug/kg-dryair "
+state   real   dust_4_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_4_OUT"    "dust size bin 4 outside: 4.5um effective radius"     "ug/kg-dryair "
 state   real   dust_5_out       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "DUST_5_OUT"    "dust size bin 5 outside: 8.0um effective radius"     "ug/kg-dryair "
 state   real   seas_1       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "SEAS_1"    "sea-salt size bin 1: 0.3um effective radius"     "ug/kg-dryair"
 state   real   seas_2       ikjftb   chem       1         -   i0{12}rhusdf=(bdy_interp:dt)  "SEAS_2"    "sea-salt size bin 2: 1.0um effective radius"     "ug/kg-dryair"
@@ -4041,7 +4041,7 @@ package saprc99_mosaic_8bin_vbs2_kpp    chem_opt==204   -       chem:o3,h2o2,no,
 package   nmhc9_kpp     chem_opt==200                   -             chem:o3,h2o2,ch4,op1,hcho,ch3oh,co,hno3,no3,n2o5,hno4,no,no2,isopr,mvk,iso2,isooh,mvko2,mvkooh,ison,aca,acol,hcooh,mpan,naca,pan,pa,paa,mglo,c2h6,eTooh,ald,c3h8,pRooh,acet,acooh,eTo2,pRo2,aco2,c3h6,c3h6ooh,c2h4,c4h10,buooh,mek,mekooh,mEcoco,c3h6o2,c4h9o2,meko2,onit,pRono2,ch3o2,acetol,acetp,aceto2,ch3cooh,c4h9ooh,mEoh,ho,ho2,mEo2,mEo2no2
 
 # GOCART Packages (no Ozone chemistry in this choice)
-package   gocart_simple     chem_opt==300                   -             chem:so2,sulf,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,dust_1_r1,dust_1_out,dust_2_r1,dust_2_out,dust_3_r1,dust_3_out,dust_4_r1,dust_4_out,dust_5_r1,dust_5_out,seas_1,seas_2,seas_3,seas_4,p10
+package   gocart_simple     chem_opt==300                   -             chem:so2,sulf,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,dust_1_r1,dust_2_r1,dust_3_r1,dust_4_r1,dust_5_r1,dust_1_out,dust_2_out,dust_3_out,dust_4_out,dust_5_out,seas_1,seas_2,seas_3,seas_4,p10
 
 package   gocartracm_kpp     chem_opt==301                   -             chem:so2,sulf,no2,no,o3,hno3,h2o2,ald,hcho,op1,op2,paa,ora1,ora2,nh3,n2o5,no3,pan,hc3,hc5,hc8,eth,co,ete,olt,oli,tol,xyl,aco3,tpan,hono,hno4,ket,gly,mgly,dcb,onit,csl,iso,co2,ch4,udd,hket,api,lim,dien,macr,ho,ho2,dms,msa,p25,bc1,bc2,oc1,oc2,dust_1,dust_2,dust_3,dust_4,dust_5,seas_1,seas_2,seas_3,seas_4,p10
 
@@ -4147,7 +4147,7 @@ package   opt_out      opt_pars_out==1             -          ext_coef:extcof3,e
 
 # dust and sea salt packages
 package   dustgocart    dust_opt==1                  -              emis_dust:edust1,edust2,edust3,edust4,edust5 
-package   dustgocartafwa   dust_opt==3               -              emis_dust:edust1,edust2,edust3,edust4,edust5,edust1_r1,edust1_out,edust2_r1,edust2_out,edust3_r1,edust3_out,edust4_r1,edust4_out,edust5_r1,edust5_out;state:afwa_dustloft,tot_dust,tot_edust,vis_dust
+package   dustgocartafwa   dust_opt==3               -              emis_dust:edust1,edust2,edust3,edust4,edust5,edust1_r1,edust2_r1,edust3_r1,edust4_r1,edust5_r1,edust1_out,edust2_out,edust3_out,edust4_out,edust5_out;state:afwa_dustloft,tot_dust,tot_edust,vis_dust
 package   dustuoc       dust_opt==4                  -              emis_dust:edust1,edust2,edust3,edust4,edust5
 package   shao_2001     dust_schme==1                -              emis_dust:edust1,edust2,edust3,edust4,edust5
 package   shao_2004     dust_schme==2                -              emis_dust:edust1,edust2,edust3,edust4,edust5
