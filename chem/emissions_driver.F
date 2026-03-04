@@ -28,6 +28,7 @@ CONTAINS
          erup_beg,erup_end,                                                &
          xland,xlat,xlong,z_at_w,z,smois,dustin,seasin,                    &
          srcmask_r1, srcmask_out,                                          &
+         frcovbare,                                                        &
          sebio_iso,sebio_oli,sebio_api,sebio_lim,sebio_xyl,                &
          sebio_hc3,sebio_ete,sebio_olt,sebio_ket,sebio_ald,                &   
          sebio_hcho,sebio_eth,sebio_ora2,sebio_co,sebio_nr,                &
@@ -198,6 +199,7 @@ CONTAINS
                                                      xland,                &
                                                      srcmask_r1,           &
                                                      srcmask_out,          &
+                                                     frcovbare,            &
                                                      xlat,                 &
                                                      xlong,                &
                                                      znt,                  &
@@ -791,7 +793,8 @@ real, save :: freq_industry(24)    = &
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,                     &
          ust,znt,clayfrac,sandfrac,clayfrac_nga,sandfrac_nga,afwa_dustloft,&!EDH
          tot_dust,tot_edust,vis_dust,dust_alpha,dust_gamma,dust_smtune,dust_ustune, &
-         srcmask_r1, srcmask_out, &         
+         srcmask_r1, srcmask_out,                                          &
+         frcovbare,                                                        &         
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )

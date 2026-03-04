@@ -19,7 +19,8 @@ CONTAINS
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,      &
          ust,znt,clay_wrf,sand_wrf,clay_nga,sand_nga,afwa_dustloft,                 &
          tot_dust,tot_edust,vis_dust,alpha,gamma,smtune,ustune,            &
-         srcmask_r1, srcmask_out,                                          &         
+         srcmask_r1, srcmask_out,                                          & 
+         frcovbare,                                                        &        
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -59,7 +60,8 @@ CONTAINS
                                                      clay_nga,             &
                                                      sand_nga,             &
                                                      srcmask_r1,           &
-                                                     srcmask_out,          &                                                    
+                                                     srcmask_out,          & 
+                                                     frcovbare,            &                                                   
                                                      snowh
    REAL, DIMENSION( ims:ime , kms:kme , jms:jme )   ,                      &
          INTENT(IN   ) ::                            alt,                  &
@@ -292,7 +294,8 @@ CONTAINS
 
       call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
                        erodtot, ilwi, gravsm, volsm, airden,dz_lowest,   &
-                       bems, ustart, g, drylimit, alpha, gamma, smois_opt)
+                       bems, ustart, g, drylimit, alpha, gamma, smois_opt, &
+                       frcovbare(i,j))
 
       ! --- Tag dust emissions ---
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
@@ -407,7 +410,8 @@ CONTAINS
 
   SUBROUTINE source_dust(imx, jmx, lmx, nmx, smx, dt1, tc, ustar, massfrac,&
                          erod, ilwi, gravsm, volsm, airden, dz_lowest,     &
-                         bems, ustart, g0, drylimit, alpha, gamma, smois_opt)
+                         bems, ustart, g0, drylimit, alpha, gamma, smois_opt, &
+                         frcovbare)
 
   ! ****************************************************************************
   ! *  Evaluate the source of each dust particles size bin by soil emission  
@@ -431,6 +435,7 @@ CONTAINS
   ! *         JMX       Number of J points                            (-)
   ! *         LMX       Number of L points                            (-)
   ! *         dz_lowest heigth of the lowest layer                    (m)
+  ! *         frcovbare  Bare soil fraction at this grid point        (-)
   ! *
   ! *  Data (see module_data_gocart_dust):
   ! *         SPOINT    Pointer to 3 soil classes                     (-)
@@ -478,6 +483,7 @@ CONTAINS
   INTEGER, INTENT(IN)   :: nmx,imx,jmx,lmx,smx
   INTEGER, INTENT(IN)   :: ilwi(imx,jmx)
   REAL*8, INTENT(IN)    :: erod(imx,jmx)
+  REAL, INTENT(IN)      :: frcovbare(imx,jmx)
   REAL*8, INTENT(IN)    :: ustar(imx,jmx)
   REAL*8, INTENT(IN)    :: gravsm(imx,jmx)
   REAL*8, INTENT(IN)    :: drylimit(imx,jmx) 
@@ -631,7 +637,7 @@ CONTAINS
         IF (beta .gt. betamax) THEN
           beta=betamax
         ENDIF
-        emit=emit+salt*(erod(i,j)**gamma)*alpha*beta    ! (kg m^-2 s^-1)
+        emit=emit+salt*(erod(i,j)**gamma)*alpha*beta*frcovbare(i,j)    ! (kg m^-2 s^-1)
       END DO
     END DO
   END DO                                 ! End do over saltation bins
