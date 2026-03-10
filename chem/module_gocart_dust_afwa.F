@@ -633,10 +633,18 @@ CONTAINS
         ! would be huge dust producers, which is generally not the case.
         ! Equation derived from wind-tunnel experiments (see MB95).
  
-        beta=10**(13.6*massfrac(1)-6.0)  ! (unitless)
-        IF (beta .gt. betamax) THEN
-          beta=betamax
+        ! beta=10**(13.6*massfrac(1)-6.0)  ! (unitless)
+        ! IF (beta .gt. betamax) THEN
+        !   beta=betamax
+        ! ENDIF
+        
+        ! Use Eq. 13 and Eq. 14 from Ito and Kok, JGR, 2017 
+        IF (massfrac(1) .lt. 0.2) THEN
+          beta = 1.0 / (1.0 + (0.4 - massfrac(1)) - massfrac(2))
+        ELSE
+          beta = 1.0 / (1.0 + massfrac(1) - massfrac(2))
         ENDIF
+
         emit=emit+salt*(erod(i,j)**gamma)*alpha*beta*frcovbare(i,j)    ! (kg m^-2 s^-1)
       END DO
     END DO
