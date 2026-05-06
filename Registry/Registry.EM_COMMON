@@ -78,6 +78,7 @@ state    real  traj_lat       {ntraj}       dyn_em      1         Z     irh     
 # Variables from WPS
 #
 
+state    real   dpfct          ij       misc        1        -     i012h   "DPFCT"    "Hybrid drag partition factor (rocks + vegetation)"          "fraction"
 state    real   frcovbare      ij       misc        1        -     i012h   "FRCOVBARE"    "Bare soil fraction (0-1)"          "fraction"
 state    real   srcmask_r1     ij       misc        1        -     i012h   "SRCMASK_R1"   "Region 1 source mask (0/1)"        "1"
 state    real   srcmask_out    ij       misc        1        -     i012h   "SRCMASK_OUT"  "Outside-of-defined-regions mask (0/1)"  "1"

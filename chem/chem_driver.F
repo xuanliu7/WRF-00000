@@ -833,6 +833,7 @@
               z_at_w,zmid,grid%smois,dustin,seasin,                                        &
               grid%srcmask_r1, grid%srcmask_out,                                           & ! NEW: added masks
               grid%frcovbare,                                                              & ! NEW: added bare soil fraction
+              grid%dpfct,                                                                  & ! NEW: added hybrid drag partition factor
               grid%sebio_iso,grid%sebio_oli,grid%sebio_api,grid%sebio_lim,                 &
               grid%sebio_xyl,grid%sebio_hc3,grid%sebio_ete,grid%sebio_olt,                 &
               grid%sebio_ket,grid%sebio_ald,grid%sebio_hcho,grid%sebio_eth,                &

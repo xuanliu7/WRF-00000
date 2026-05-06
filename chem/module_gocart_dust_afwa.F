@@ -20,7 +20,8 @@ CONTAINS
          ust,znt,clay_wrf,sand_wrf,clay_nga,sand_nga,afwa_dustloft,                 &
          tot_dust,tot_edust,vis_dust,alpha,gamma,smtune,ustune,            &
          srcmask_r1, srcmask_out,                                          & 
-         frcovbare,                                                        &        
+         frcovbare,                                                        &
+         dpfct,                                                            &        
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -61,7 +62,8 @@ CONTAINS
                                                      sand_nga,             &
                                                      srcmask_r1,           &
                                                      srcmask_out,          & 
-                                                     frcovbare,            &                                                   
+                                                     frcovbare,            &
+                                                     dpfct,                &                                                   
                                                      snowh
    REAL, DIMENSION( ims:ime , kms:kme , jms:jme )   ,                      &
          INTENT(IN   ) ::                            alt,                  &
@@ -295,7 +297,7 @@ CONTAINS
       call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
                        erodtot, ilwi, gravsm, volsm, airden,dz_lowest,   &
                        bems, ustart, g, drylimit, alpha, gamma, smois_opt, &
-                       frcovbare(i,j))
+                       frcovbare(i,j), dpfct(i,j))
 
       ! --- Tag dust emissions ---
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
@@ -411,7 +413,7 @@ CONTAINS
   SUBROUTINE source_dust(imx, jmx, lmx, nmx, smx, dt1, tc, ustar, massfrac,&
                          erod, ilwi, gravsm, volsm, airden, dz_lowest,     &
                          bems, ustart, g0, drylimit, alpha, gamma, smois_opt, &
-                         frcovbare)
+                         frcovbare, dpfct)
 
   ! ****************************************************************************
   ! *  Evaluate the source of each dust particles size bin by soil emission  
@@ -435,7 +437,8 @@ CONTAINS
   ! *         JMX       Number of J points                            (-)
   ! *         LMX       Number of L points                            (-)
   ! *         dz_lowest heigth of the lowest layer                    (m)
-  ! *         frcovbare  Bare soil fraction at this grid point        (-)
+  ! *         frcovbare Bare soil fraction at this grid point         (-)
+  ! *         dpfct     Hybrid drag partition factor at this grid point    (-)
   ! *
   ! *  Data (see module_data_gocart_dust):
   ! *         SPOINT    Pointer to 3 soil classes                     (-)
@@ -484,6 +487,7 @@ CONTAINS
   INTEGER, INTENT(IN)   :: ilwi(imx,jmx)
   REAL*8, INTENT(IN)    :: erod(imx,jmx)
   REAL, INTENT(IN)      :: frcovbare(imx,jmx)
+  REAL, INTENT(IN)      :: dpfct(imx,jmx)
   REAL*8, INTENT(IN)    :: ustar(imx,jmx)
   REAL*8, INTENT(IN)    :: gravsm(imx,jmx)
   REAL*8, INTENT(IN)    :: drylimit(imx,jmx) 
@@ -505,6 +509,7 @@ CONTAINS
   REAL*8    :: emit!, emit_vol
   REAL      :: rhoa, g
   REAL*8    :: salt, stotal
+  REAL*8    :: ustar_s
   INTEGER   :: i, j, m, n, s
 
 ! Global tuning constant, alpha.  Sandblasting mass efficiency, beta.
@@ -576,6 +581,9 @@ CONTAINS
     DO i = 1,imx
       DO j = 1,jmx
         rhoa = airden(i,j,1)*1.0D-3     ! (g cm^-3)
+
+        ! Apply drag partition factor to friction velocity
+        ustar_s = ustar(i,j) * dpfct(i,j) 
  
         ! Threshold friction velocity as a function of the dust density and
         ! diameter from Bagnold (1941) (m s^-1).
@@ -620,9 +628,9 @@ CONTAINS
         ! Saltation flux (kg m^-1 s^-1) from MB95
         ! ds_rel is the relative surface area distribution
  
-        IF (ustar(i,j) .gt. u_ts .and. erod(i,j) .gt. 0.0 .and. ilwi(i,j) == 1) THEN
-          salt = cmb*ds_rel(n)*(airden(i,j,1)/g0)*(ustar(i,j)**3)* &
-                 (1. + u_ts/ustar(i,j))*(1. - (u_ts**2)/(ustar(i,j)**2))
+        IF (ustar_s .gt. u_ts .and. erod(i,j) .gt. 0.0 .and. ilwi(i,j) == 1) THEN
+          salt = cmb*ds_rel(n)*(airden(i,j,1)/g0)*(ustar_s**3)* &
+                 (1. + u_ts/ustar_s)*(1. - (u_ts**2)/(ustar_s**2))
         ELSE 
           salt = 0.D0
         ENDIF
