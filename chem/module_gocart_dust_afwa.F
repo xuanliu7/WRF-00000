@@ -19,7 +19,7 @@ CONTAINS
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,      &
          ust,znt,clay_wrf,sand_wrf,clay_nga,sand_nga,afwa_dustloft,                 &
          tot_dust,tot_edust,vis_dust,alpha,gamma,smtune,ustune,            &
-         srcmask_r1, srcmask_out,                                          & 
+         srcmask,                                                          &
          frcovbare,                                                        &
          dpfct,                                                            &        
          ids,ide, jds,jde, kds,kde,                                        &
@@ -36,7 +36,9 @@ CONTAINS
                                   its,ite, jts,jte, kts,kte
    INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
           INTENT(IN   ) ::    isltyp
-                                                     
+   INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
+          INTENT(IN   ) ::    srcmask
+
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
          INTENT(INOUT ) ::                           chem
    REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL,           &
@@ -60,8 +62,6 @@ CONTAINS
                                                      sand_wrf,             &
                                                      clay_nga,             &
                                                      sand_nga,             &
-                                                     srcmask_r1,           &
-                                                     srcmask_out,          & 
                                                      frcovbare,            &
                                                      dpfct,                &                                                   
                                                      snowh
@@ -96,7 +96,16 @@ CONTAINS
   REAL, INTENT(IN   ) :: alpha, gamma, smtune, ustune
   INTEGER :: smois_opt
   real    :: dz_lowest
-  REAL :: m_r1, m_out, d1_inc, d2_inc, d3_inc, d4_inc, d5_inc
+
+  ! Source-tagged dust: srcmask(i,j) carries an integer region ID per
+  ! grid cell (0=outside any named region, 1=region 1, ...). p_dust_tag
+  ! and p_edust_tag map (region ID, dust bin) to the corresponding
+  ! Registry species index, so adding a region only means widening these
+  ! tables (and NTAG) rather than duplicating the tagging block below.
+  INTEGER, PARAMETER :: ntag = 2   ! currently: region 1 ("r1"), everything else ("out")
+  INTEGER :: itag, nt
+  REAL    :: d_inc(5)
+  INTEGER, DIMENSION(ntag,5) :: p_dust_tag, p_edust_tag
 
   conver=1.e-9
   converi=1.e9
@@ -108,6 +117,11 @@ CONTAINS
   lmx=1
   nmx=ndust
   smx=ngsalt
+
+  p_dust_tag(1,:)  = (/ p_dust_1_r1,  p_dust_2_r1,  p_dust_3_r1,  p_dust_4_r1,  p_dust_5_r1  /)
+  p_dust_tag(2,:)  = (/ p_dust_1_out, p_dust_2_out, p_dust_3_out, p_dust_4_out, p_dust_5_out /)
+  p_edust_tag(1,:) = (/ p_edust1_r1,  p_edust2_r1,  p_edust3_r1,  p_edust4_r1,  p_edust5_r1  /)
+  p_edust_tag(2,:) = (/ p_edust1_out, p_edust2_out, p_edust3_out, p_edust4_out, p_edust5_out /)
 
   k=kts
   DO j=jts,jte
@@ -300,24 +314,17 @@ CONTAINS
                        frcovbare(i,j), dpfct(i,j))
 
       ! --- Tag dust emissions ---
+      ! srcmask(i,j) is an exclusive region ID, so each grid cell's dust
+      ! goes to exactly one tagged bucket (itag) -- no fractional weights,
+      ! no risk of double-counting or under-counting mass across buckets.
+      itag = ntag                                ! default bucket: "out" (region 2)
+      IF (srcmask(i,j) == 1) itag = 1             ! region 1 ("r1")
+
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
-      m_r1  = MAX(0.0, MIN(1.0, srcmask_r1(i,j)))
-      m_out = MAX(0.0, MIN(1.0, srcmask_out(i,j)))
-      d1_inc = REAL( bems(1) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-      d2_inc = REAL( bems(2) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-      d3_inc = REAL( bems(3) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-      d4_inc = REAL( bems(4) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-      d5_inc = REAL( bems(5) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-      chem(i,kts,j,p_dust_1_r1)  = chem(i,kts,j,p_dust_1_r1)  + d1_inc * m_r1
-      chem(i,kts,j,p_dust_2_r1)  = chem(i,kts,j,p_dust_2_r1)  + d2_inc * m_r1
-      chem(i,kts,j,p_dust_3_r1)  = chem(i,kts,j,p_dust_3_r1)  + d3_inc * m_r1
-      chem(i,kts,j,p_dust_4_r1)  = chem(i,kts,j,p_dust_4_r1)  + d4_inc * m_r1
-      chem(i,kts,j,p_dust_5_r1)  = chem(i,kts,j,p_dust_5_r1)  + d5_inc * m_r1
-      chem(i,kts,j,p_dust_1_out) = chem(i,kts,j,p_dust_1_out) + d1_inc * m_out
-      chem(i,kts,j,p_dust_2_out) = chem(i,kts,j,p_dust_2_out) + d2_inc * m_out
-      chem(i,kts,j,p_dust_3_out) = chem(i,kts,j,p_dust_3_out) + d3_inc * m_out
-      chem(i,kts,j,p_dust_4_out) = chem(i,kts,j,p_dust_4_out) + d4_inc * m_out
-      chem(i,kts,j,p_dust_5_out) = chem(i,kts,j,p_dust_5_out) + d5_inc * m_out
+      DO nt = 1, 5
+        d_inc(nt) = REAL( bems(nt) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
+        chem(i,kts,j,p_dust_tag(itag,nt)) = chem(i,kts,j,p_dust_tag(itag,nt)) + d_inc(nt)
+      END DO
 
       IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
         dustin(i,j,1:5)=tc(1:5)*converi
@@ -366,17 +373,10 @@ CONTAINS
      emis_dust(i,1,j,p_edust4)=emis_dust(i,1,j,p_edust4)+bems(4)
      emis_dust(i,1,j,p_edust5)=emis_dust(i,1,j,p_edust5)+bems(5)
 
-     ! Source-tagged emission diagnostics
-     emis_dust(i,1,j,p_edust1_r1) = emis_dust(i,1,j,p_edust1_r1) + bems(1) * m_r1
-     emis_dust(i,1,j,p_edust2_r1) = emis_dust(i,1,j,p_edust2_r1) + bems(2) * m_r1
-     emis_dust(i,1,j,p_edust3_r1) = emis_dust(i,1,j,p_edust3_r1) + bems(3) * m_r1
-     emis_dust(i,1,j,p_edust4_r1) = emis_dust(i,1,j,p_edust4_r1) + bems(4) * m_r1
-     emis_dust(i,1,j,p_edust5_r1) = emis_dust(i,1,j,p_edust5_r1) + bems(5) * m_r1
-     emis_dust(i,1,j,p_edust1_out) = emis_dust(i,1,j,p_edust1_out) + bems(1) * m_out
-     emis_dust(i,1,j,p_edust2_out) = emis_dust(i,1,j,p_edust2_out) + bems(2) * m_out
-     emis_dust(i,1,j,p_edust3_out) = emis_dust(i,1,j,p_edust3_out) + bems(3) * m_out
-     emis_dust(i,1,j,p_edust4_out) = emis_dust(i,1,j,p_edust4_out) + bems(4) * m_out
-     emis_dust(i,1,j,p_edust5_out) = emis_dust(i,1,j,p_edust5_out) + bems(5) * m_out
+     ! Source-tagged emission diagnostics (same exclusive itag bucket as above)
+     DO nt = 1, 5
+       emis_dust(i,1,j,p_edust_tag(itag,nt)) = emis_dust(i,1,j,p_edust_tag(itag,nt)) + bems(nt)
+     END DO
 
      ! Diagnostic accumulated total emitted dust (kg/m2)
      tot_edust(i,j)=tot_edust(i,j)+(bems(1)+bems(2)+bems(3)+bems(4)+bems(5))

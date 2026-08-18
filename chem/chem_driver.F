@@ -831,7 +831,7 @@
               grid%ust,grid%znt,grid%dms_0,grid%erup_beg,grid%erup_end,                    &
               grid%xland,grid%xlat,grid%xlong,                                             &
               z_at_w,zmid,grid%smois,dustin,seasin,                                        &
-              grid%srcmask_r1, grid%srcmask_out,                                           & ! NEW: added masks
+              grid%srcmask,                                                                & ! NEW: dust source-region ID mask
               grid%frcovbare,                                                              & ! NEW: added bare soil fraction
               grid%dpfct,                                                                  & ! NEW: added hybrid drag partition factor
               grid%sebio_iso,grid%sebio_oli,grid%sebio_api,grid%sebio_lim,                 &

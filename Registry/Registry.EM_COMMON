@@ -80,8 +80,8 @@ state    real  traj_lat       {ntraj}       dyn_em      1         Z     irh     
 
 state    real   dpfct          ij       misc        1        -     i012h   "DPFCT"    "Hybrid drag partition factor (rocks + vegetation)"          "fraction"
 state    real   frcovbare      ij       misc        1        -     i012h   "FRCOVBARE"    "Bare soil fraction (0-1)"          "fraction"
-state    real   srcmask_r1     ij       misc        1        -     i012h   "SRCMASK_R1"   "Region 1 source mask (0/1)"        "1"
-state    real   srcmask_out    ij       misc        1        -     i012h   "SRCMASK_OUT"  "Outside-of-defined-regions mask (0/1)"  "1"
+state    integer srcmask       ij       misc        1        -     i012h   "SRCMASK"      "Dust source region ID (0=outside/other, 1=region 1, 2..N=additional regions)"  "category"
+state    real   dust_mineralogy ij{dmix}  misc     1        -     i012h   "DUST_MINERALOGY"  "Mineral mass fraction by size bin (0-1), mineral x bin flattened into one category dim"  "fraction"
 state    real   u_gc           igj      dyn_em      1        XZ    i1  "UU"     "x-wind component"    "m s-1"
 state    real   v_gc           igj      dyn_em      1        YZ    i1  "VV"     "y-wind component"    "m s-1"
 state    real   t_gc           igj      dyn_em      1        Z     i1  "TT"     "temperature"         "K"

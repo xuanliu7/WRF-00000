@@ -27,7 +27,7 @@ CONTAINS
          u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,dms_0,              &
          erup_beg,erup_end,                                                &
          xland,xlat,xlong,z_at_w,z,smois,dustin,seasin,                    &
-         srcmask_r1, srcmask_out,                                          &
+         srcmask,                                                          &
          frcovbare,                                                        &
          dpfct,                                                            &
          sebio_iso,sebio_oli,sebio_api,sebio_lim,sebio_xyl,                &
@@ -188,7 +188,8 @@ CONTAINS
    INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
           INTENT(IN   ) ::                                                 &
                                                      ivgtyp,               &
-                                                     isltyp
+                                                     isltyp,               &
+                                                     srcmask
    REAL,  DIMENSION( ims:ime , jms:jme )                   ,               &
           INTENT(IN   ) ::                                                 &
                                                      u10,                  &
@@ -198,8 +199,6 @@ CONTAINS
                                                      rmol,                 &
                                                      ust,                  &
                                                      xland,                &
-                                                     srcmask_r1,           &
-                                                     srcmask_out,          &
                                                      frcovbare,            &
                                                      dpfct,                &
                                                      xlat,                 &
@@ -795,7 +794,7 @@ real, save :: freq_industry(24)    = &
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,                     &
          ust,znt,clayfrac,sandfrac,clayfrac_nga,sandfrac_nga,afwa_dustloft,&!EDH
          tot_dust,tot_edust,vis_dust,dust_alpha,dust_gamma,dust_smtune,dust_ustune, &
-         srcmask_r1, srcmask_out,                                          &
+         srcmask,                                                          &
          frcovbare,                                                        &
          dpfct,                                                            &
          ids,ide, jds,jde, kds,kde,                                        &
