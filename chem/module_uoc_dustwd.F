@@ -115,7 +115,7 @@ REAL, DIMENSION( ims:ime, kms:kme, jms:jme ), INTENT(IN ) :: alt, dz8w
 
 den_dust(:) = 2650.
 
-dbinm(:) = 2.0d0*reff_dust(:)
+dbinm(:) = 2.0d0*reff_dust(1:nbins)   ! nbins=5: this UOC scheme only ever uses bins 1-5
 
 CALL get_wrf_debug_level(debug_level)
 
