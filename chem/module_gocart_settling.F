@@ -12,9 +12,10 @@ CONTAINS
 SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
            chem,rho_phy,dz8w,p8w,p_phy,                             &
            dustin,seasin,dx,g,                                      &
-           dustgraset_1,dustgraset_2,dustgraset_3,                  & 
-           dustgraset_4,dustgraset_5,                               & 
-           setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,imod,       & 
+           dustgraset_1,dustgraset_2,dustgraset_3,                  &
+           dustgraset_4,dustgraset_5,dustgraset_6,dustgraset_7,     &
+           setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,            &
+           setvel_6,setvel_7,imod,                                  &
            ids,ide,jds,jde,kds,kde,                                 &
            ims,ime,jms,jme,kms,kme,                                 &
            its,ite,jts,jte,kts,kte)
@@ -35,28 +36,41 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
   REAL, DIMENSION(ims:ime,kms:kme,jms:jme,num_moist), INTENT(IN) :: moist
   REAL, DIMENSION(ims:ime,kms:kme,jms:jme,num_chem), INTENT(INOUT) :: chem
   REAL, DIMENSION(ims:ime,kms:kme,jms:jme), INTENT(IN) :: t_phy,p_phy,dz8w,p8w,rho_phy
+  REAL,  DIMENSION( ims:ime , jms:jme, 7 ),                          &
+          INTENT(IN   ) ::  dustin
   REAL,  DIMENSION( ims:ime , jms:jme, 5 ),                          &
-          INTENT(IN   ) ::  dustin,seasin  
+          INTENT(IN   ) ::  seasin
 
-  INTEGER, INTENT(IN) :: imod          
+  INTEGER, INTENT(IN) :: imod
   REAL, DIMENSION(ims:ime,jms:jme), INTENT(INOUT)::                  &
         dustgraset_1,dustgraset_2,dustgraset_3,                      &
-        dustgraset_4,dustgraset_5,                                   &
-        setvel_1,setvel_2,setvel_3,setvel_4,setvel_5 
+        dustgraset_4,dustgraset_5,dustgraset_6,dustgraset_7,         &
+        setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,                &
+        setvel_6,setvel_7
 
-  REAL*8,  DIMENSION (1,1,5)          :: graset_dust,grasetvel_dust 
+  REAL*8,  DIMENSION (1,1,7)          :: graset_dust,grasetvel_dust
   ! Add tagged species deposition and velocity arrays
-  REAL*8,  DIMENSION (1,1,5)          :: graset_dust_r1, grasetvel_dust_r1
-  REAL*8,  DIMENSION (1,1,5)          :: graset_dust_out, grasetvel_dust_out
+  REAL*8,  DIMENSION (1,1,7)          :: graset_dust_r1, grasetvel_dust_r1
+  REAL*8,  DIMENSION (1,1,7)          :: graset_dust_out, grasetvel_dust_out
   REAL*8,  DIMENSION (1,1,4)          :: graset_ss,grasetvel_ss
+  ! Settling work arrays for mineral-tagged dust (independent of region
+  ! tagging above); graset_min/grasetvel_min are discarded scratch space,
+  ! not accumulated into any Registry diagnostic.
+  REAL*8,  DIMENSION (1,1,7)          :: graset_min, grasetvel_min
+  REAL*8, DIMENSION (1,1,kte-kts+1,7) :: ddust_min
 
   REAL, INTENT(IN) :: dt,dx,g
   INTEGER          :: kkk,nmx,i,j,k,kk,lmx,iseas,idust
   REAL*8, DIMENSION (1,1,kte-kts+1)   :: tmp,airden,p_mid,delz,rh
-  REAL*8, DIMENSION (1,1,kte-kts+1,5) :: ddust
+  REAL*8, DIMENSION (1,1,kte-kts+1,7) :: ddust
   ! Add arrays for tagged dust species
-  REAL*8, DIMENSION (1,1,kte-kts+1,5) :: ddust_r1, ddust_out
+  REAL*8, DIMENSION (1,1,kte-kts+1,7) :: ddust_r1, ddust_out
   REAL*8, DIMENSION (1,1,kte-kts+1,4) :: sea_salt
+
+  ! Mineral-tagged dust lookup table (see module_gocart_dust_afwa.F)
+  INTEGER, PARAMETER :: nmin = 8
+  INTEGER :: mn
+  INTEGER, DIMENSION(7,nmin) :: p_dust_mineral
   
   INTEGER :: uoc_flag  ! flag for UoC dust schemes
 !
@@ -74,11 +88,19 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
 
   lmx=kte-kts+1
 
+  p_dust_mineral(1,:) = (/ p_dust_1_min1, p_dust_1_min2, p_dust_1_min3, p_dust_1_min4, p_dust_1_min5, p_dust_1_min6, p_dust_1_min7, p_dust_1_min8 /)
+  p_dust_mineral(2,:) = (/ p_dust_2_min1, p_dust_2_min2, p_dust_2_min3, p_dust_2_min4, p_dust_2_min5, p_dust_2_min6, p_dust_2_min7, p_dust_2_min8 /)
+  p_dust_mineral(3,:) = (/ p_dust_3_min1, p_dust_3_min2, p_dust_3_min3, p_dust_3_min4, p_dust_3_min5, p_dust_3_min6, p_dust_3_min7, p_dust_3_min8 /)
+  p_dust_mineral(4,:) = (/ p_dust_4_min1, p_dust_4_min2, p_dust_4_min3, p_dust_4_min4, p_dust_4_min5, p_dust_4_min6, p_dust_4_min7, p_dust_4_min8 /)
+  p_dust_mineral(5,:) = (/ p_dust_5_min1, p_dust_5_min2, p_dust_5_min3, p_dust_5_min4, p_dust_5_min5, p_dust_5_min6, p_dust_5_min7, p_dust_5_min8 /)
+  p_dust_mineral(6,:) = (/ p_dust_6_min1, p_dust_6_min2, p_dust_6_min3, p_dust_6_min4, p_dust_6_min5, p_dust_6_min6, p_dust_6_min7, p_dust_6_min8 /)
+  p_dust_mineral(7,:) = (/ p_dust_7_min1, p_dust_7_min2, p_dust_7_min3, p_dust_7_min4, p_dust_7_min5, p_dust_7_min6, p_dust_7_min7, p_dust_7_min8 /)
+
   do j=jts,jte
     do i=its,ite
 
        IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11) THEN
-         do kkk=1,5
+         do kkk=1,7
             ddust(1,1,kts,kkk)=dustin(i,j,kkk)*conver
          enddo
          kk=0
@@ -105,17 +127,23 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
             ddust(1,1,kk,3)=chem(i,k,j,p_dust_3)
             ddust(1,1,kk,4)=chem(i,k,j,p_dust_4)
             ddust(1,1,kk,5)=chem(i,k,j,p_dust_5)
+            ddust(1,1,kk,6)=chem(i,k,j,p_dust_6)
+            ddust(1,1,kk,7)=chem(i,k,j,p_dust_7)
             ! Add tagged dust species
             ddust_r1(1,1,kk,1)=chem(i,k,j,p_dust_1_r1)
-            ddust_r1(1,1,kk,2)=chem(i,k,j,p_dust_2_r1)   
+            ddust_r1(1,1,kk,2)=chem(i,k,j,p_dust_2_r1)
             ddust_r1(1,1,kk,3)=chem(i,k,j,p_dust_3_r1)
             ddust_r1(1,1,kk,4)=chem(i,k,j,p_dust_4_r1)
             ddust_r1(1,1,kk,5)=chem(i,k,j,p_dust_5_r1)
+            ddust_r1(1,1,kk,6)=chem(i,k,j,p_dust_6_r1)
+            ddust_r1(1,1,kk,7)=chem(i,k,j,p_dust_7_r1)
             ddust_out(1,1,kk,1)=chem(i,k,j,p_dust_1_out)
-            ddust_out(1,1,kk,2)=chem(i,k,j,p_dust_2_out)  
-            ddust_out(1,1,kk,3)=chem(i,k,j,p_dust_3_out) 
+            ddust_out(1,1,kk,2)=chem(i,k,j,p_dust_2_out)
+            ddust_out(1,1,kk,3)=chem(i,k,j,p_dust_3_out)
             ddust_out(1,1,kk,4)=chem(i,k,j,p_dust_4_out)
-            ddust_out(1,1,kk,5)=chem(i,k,j,p_dust_5_out) 
+            ddust_out(1,1,kk,5)=chem(i,k,j,p_dust_5_out)
+            ddust_out(1,1,kk,6)=chem(i,k,j,p_dust_6_out)
+            ddust_out(1,1,kk,7)=chem(i,k,j,p_dust_7_out)
 
             p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j)
             delz(1,1,kk)=dz8w(i,kte-k+kts,j)                            ! delz(1) = dz8w(kte), delz(lmx)=dz8w(kts)
@@ -136,16 +164,16 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
 
        iseas=0
        idust=1
-       CALL settling(1,1,lmx,5,g,dyn_visc,ddust,tmp,p_mid,delz,       &
-                     imod,graset_dust,grasetvel_dust, uoc_flag,       & 
+       CALL settling(1,1,lmx,7,g,dyn_visc,ddust,tmp,p_mid,delz,       &
+                     imod,graset_dust,grasetvel_dust, uoc_flag,       &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
-       
+
        ! ===== ADD SETTLING FOR TAGGED SPECIES =====
-       CALL settling(1,1,lmx,5,g,dyn_visc,ddust_r1,tmp,p_mid,delz,  &
+       CALL settling(1,1,lmx,7,g,dyn_visc,ddust_r1,tmp,p_mid,delz,  &
                      imod,graset_dust_r1,grasetvel_dust_r1, uoc_flag, &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
-       
-       CALL settling(1,1,lmx,5,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
+
+       CALL settling(1,1,lmx,7,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
                      imod,graset_dust_out,grasetvel_dust_out, uoc_flag, &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
        ! ===========================================
@@ -174,25 +202,65 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
              chem(i,k,j,p_dust_3)=ddust(1,1,kk,3)                         ! ...
              chem(i,k,j,p_dust_4)=ddust(1,1,kk,4)                         ! ...
              chem(i,k,j,p_dust_5)=ddust(1,1,kk,5)                         ! dust for size bin 5 (dust_opt 3: for all size bins) [ug/kg]
-             
+             chem(i,k,j,p_dust_6)=ddust(1,1,kk,6)
+             chem(i,k,j,p_dust_7)=ddust(1,1,kk,7)
+
              ! ===== WRITE BACK TAGGED DUST SPECIES =====
              chem(i,k,j,p_dust_1_r1)=ddust_r1(1,1,kk,1)
              chem(i,k,j,p_dust_2_r1)=ddust_r1(1,1,kk,2)
              chem(i,k,j,p_dust_3_r1)=ddust_r1(1,1,kk,3)
              chem(i,k,j,p_dust_4_r1)=ddust_r1(1,1,kk,4)
              chem(i,k,j,p_dust_5_r1)=ddust_r1(1,1,kk,5)
+             chem(i,k,j,p_dust_6_r1)=ddust_r1(1,1,kk,6)
+             chem(i,k,j,p_dust_7_r1)=ddust_r1(1,1,kk,7)
              chem(i,k,j,p_dust_1_out)=ddust_out(1,1,kk,1)
              chem(i,k,j,p_dust_2_out)=ddust_out(1,1,kk,2)
              chem(i,k,j,p_dust_3_out)=ddust_out(1,1,kk,3)
              chem(i,k,j,p_dust_4_out)=ddust_out(1,1,kk,4)
              chem(i,k,j,p_dust_5_out)=ddust_out(1,1,kk,5)
+             chem(i,k,j,p_dust_6_out)=ddust_out(1,1,kk,6)
+             chem(i,k,j,p_dust_7_out)=ddust_out(1,1,kk,7)
              ! ==========================================
                           
              sea_salt(1,1,kk,1)=chem(i,k,j,p_seas_1)                    ! salt [ug/kg]
              sea_salt(1,1,kk,2)=chem(i,k,j,p_seas_2)
              sea_salt(1,1,kk,3)=chem(i,k,j,p_seas_3)
-             sea_salt(1,1,kk,4)=chem(i,k,j,p_seas_4)              
+             sea_salt(1,1,kk,4)=chem(i,k,j,p_seas_4)
           ENDDO
+
+          ! ===== SETTLING FOR MINERAL-TAGGED DUST =====
+          ! Independent of region tagging above; each mineral gets its own
+          ! full settling pass since settling() takes one full (nmx-bin)
+          ! column at a time. graset_min/grasetvel_min are scratch and not
+          ! accumulated into any diagnostic (see declaration comment).
+          DO mn = 1, nmin
+             kk = 0
+             DO k = kts,kte
+                kk = kk+1
+                ddust_min(1,1,kk,1)=chem(i,k,j,p_dust_mineral(1,mn))
+                ddust_min(1,1,kk,2)=chem(i,k,j,p_dust_mineral(2,mn))
+                ddust_min(1,1,kk,3)=chem(i,k,j,p_dust_mineral(3,mn))
+                ddust_min(1,1,kk,4)=chem(i,k,j,p_dust_mineral(4,mn))
+                ddust_min(1,1,kk,5)=chem(i,k,j,p_dust_mineral(5,mn))
+                ddust_min(1,1,kk,6)=chem(i,k,j,p_dust_mineral(6,mn))
+                ddust_min(1,1,kk,7)=chem(i,k,j,p_dust_mineral(7,mn))
+             ENDDO
+             CALL settling(1,1,lmx,7,g,dyn_visc,ddust_min,tmp,p_mid,delz, &
+                           imod,graset_min,grasetvel_min, uoc_flag,       &
+                           den_dust,reff_dust,dt,rh,idust,iseas,airden)
+             kk = 0
+             DO k = kts,kte
+                kk = kk+1
+                chem(i,k,j,p_dust_mineral(1,mn))=ddust_min(1,1,kk,1)
+                chem(i,k,j,p_dust_mineral(2,mn))=ddust_min(1,1,kk,2)
+                chem(i,k,j,p_dust_mineral(3,mn))=ddust_min(1,1,kk,3)
+                chem(i,k,j,p_dust_mineral(4,mn))=ddust_min(1,1,kk,4)
+                chem(i,k,j,p_dust_mineral(5,mn))=ddust_min(1,1,kk,5)
+                chem(i,k,j,p_dust_mineral(6,mn))=ddust_min(1,1,kk,6)
+                chem(i,k,j,p_dust_mineral(7,mn))=ddust_min(1,1,kk,7)
+             ENDDO
+          ENDDO
+          ! =============================================
        ENDIF
 
         !graset_dust in [ug/kg][m/s]
@@ -201,12 +269,16 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
        dustgraset_3(i,j)=dustgraset_3(i,j)+conver*graset_dust(1,1,3)*airden(1,1,1)*dt
        dustgraset_4(i,j)=dustgraset_4(i,j)+conver*graset_dust(1,1,4)*airden(1,1,1)*dt
        dustgraset_5(i,j)=dustgraset_5(i,j)+conver*graset_dust(1,1,5)*airden(1,1,1)*dt
+       dustgraset_6(i,j)=dustgraset_6(i,j)+conver*graset_dust(1,1,6)*airden(1,1,1)*dt
+       dustgraset_7(i,j)=dustgraset_7(i,j)+conver*graset_dust(1,1,7)*airden(1,1,1)*dt
 
        setvel_1(i,j)=grasetvel_dust(1,1,1)                            ! settling velocity [m/s]
        setvel_2(i,j)=grasetvel_dust(1,1,2)
        setvel_3(i,j)=grasetvel_dust(1,1,3)
        setvel_4(i,j)=grasetvel_dust(1,1,4)
        setvel_5(i,j)=grasetvel_dust(1,1,5)
+       setvel_6(i,j)=grasetvel_dust(1,1,6)
+       setvel_7(i,j)=grasetvel_dust(1,1,7)
        
        iseas=1
        idust=0

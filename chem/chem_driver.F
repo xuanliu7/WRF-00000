@@ -234,7 +234,8 @@
                                                              ,t_phy,dz8w,t8w,p8w                  &
                                                              ,rho,rri,z_at_w,vvel,zmid,rh
       REAL,DIMENSION(grid%sm31:grid%em31,grid%sm33:grid%em33) :: pbl_h
-      REAL,DIMENSION(grid%sm31:grid%em31,grid%sm33:grid%em33, 5) :: seasin,dustin
+      REAL,DIMENSION(grid%sm31:grid%em31,grid%sm33:grid%em33, 5) :: seasin
+      REAL,DIMENSION(grid%sm31:grid%em31,grid%sm33:grid%em33, 7) :: dustin
       REAL,DIMENSION(grid%sm32:grid%em32-1) :: QL,TL
       REAL,DIMENSION(grid%sm31:grid%em31,grid%sm33:grid%em33) :: REXNSFC,FACTRS                &
                                         ,TOT,TSFC
@@ -834,6 +835,7 @@
               grid%srcmask,                                                                & ! NEW: dust source-region ID mask
               grid%frcovbare,                                                              & ! NEW: added bare soil fraction
               grid%dpfct,                                                                  & ! NEW: added hybrid drag partition factor
+              grid%dust_mineralogy,                                                        & ! NEW: mineral mass fraction by size bin
               grid%sebio_iso,grid%sebio_oli,grid%sebio_api,grid%sebio_lim,                 &
               grid%sebio_xyl,grid%sebio_hc3,grid%sebio_ete,grid%sebio_olt,                 &
               grid%sebio_ket,grid%sebio_ald,grid%sebio_hcho,grid%sebio_eth,                &
@@ -1066,9 +1068,10 @@
                  grid%dustdrydep_4,grid%dustdrydep_5,                                 &
                  grid%depvelocity,                                                    &      
                  grid%dustgraset_1,grid%dustgraset_2,grid%dustgraset_3,               &
-                 grid%dustgraset_4,grid%dustgraset_5,                                 &
+                 grid%dustgraset_4,grid%dustgraset_5,grid%dustgraset_6,               &
+                 grid%dustgraset_7,                                                   &
                  grid%setvel_1,grid%setvel_2,grid%setvel_3,grid%setvel_4,             &
-                 grid%setvel_5, imod,                                                 & 
+                 grid%setvel_5,grid%setvel_6,grid%setvel_7, imod,                     &
                  grid%is_CAMMGMP_used,                                                &
                  grid%dep_vel,grid%num_vert_mix,                                      &
                  ids,ide, jds,jde, kds,kde,                                           &

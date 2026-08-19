@@ -30,6 +30,7 @@ CONTAINS
          srcmask,                                                          &
          frcovbare,                                                        &
          dpfct,                                                            &
+         dust_mineralogy,                                                  &
          sebio_iso,sebio_oli,sebio_api,sebio_lim,sebio_xyl,                &
          sebio_hc3,sebio_ete,sebio_olt,sebio_ket,sebio_ald,                &   
          sebio_hcho,sebio_eth,sebio_ora2,sebio_co,sebio_nr,                &
@@ -153,9 +154,12 @@ CONTAINS
    REAL, DIMENSION( ims:ime, jms:jme), &
          INTENT(IN ) ::                                                    &
          lai_vegmask
+   REAL, DIMENSION( ims:ime, jms:jme,7),&
+         INTENT(INOUT ) ::                                                 &
+         dustin
    REAL, DIMENSION( ims:ime, jms:jme,5),&
          INTENT(INOUT ) ::                                                 &
-         dustin,seasin
+         seasin
    REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),   &
          OPTIONAL, INTENT(INOUT ) ::                                       &
          emis_dust
@@ -188,8 +192,7 @@ CONTAINS
    INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
           INTENT(IN   ) ::                                                 &
                                                      ivgtyp,               &
-                                                     isltyp,               &
-                                                     srcmask
+                                                     isltyp
    REAL,  DIMENSION( ims:ime , jms:jme )                   ,               &
           INTENT(IN   ) ::                                                 &
                                                      u10,                  &
@@ -201,6 +204,7 @@ CONTAINS
                                                      xland,                &
                                                      frcovbare,            &
                                                      dpfct,                &
+                                                     srcmask,              &
                                                      xlat,                 &
                                                      xlong,                &
                                                      znt,                  &
@@ -211,6 +215,9 @@ CONTAINS
                                                      potevp,               &
                                                      sfcevp,               &
                                                      lu_index
+   REAL,  DIMENSION( ims:ime , jms:jme, 56 )                ,               &
+          INTENT(IN   ) ::                                                 &
+                                                     dust_mineralogy
 
    REAL, DIMENSION( ims:ime , jms:jme )                  ,                 &
          OPTIONAL,                                                         &
@@ -797,6 +804,7 @@ real, save :: freq_industry(24)    = &
          srcmask,                                                          &
          frcovbare,                                                        &
          dpfct,                                                            &
+         dust_mineralogy,                                                  &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )

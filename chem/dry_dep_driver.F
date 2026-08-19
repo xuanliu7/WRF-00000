@@ -27,8 +27,9 @@ CONTAINS
                dustdrydep_4,dustdrydep_5,                                 &
                depvelocity,                                               &               
                dustgraset_1,dustgraset_2,dustgraset_3,                    &
-               dustgraset_4,dustgraset_5,                                 &
-               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5, imod,        &       
+               dustgraset_4,dustgraset_5,dustgraset_6,dustgraset_7,       &
+               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,              &
+               setvel_6,setvel_7, imod,                                   &
                is_CAMMGMP_used,                                           &
                dep_vel,num_vert_mix,                                      &
                ids,ide, jds,jde, kds,kde,                                 &
@@ -133,7 +134,9 @@ CONTAINS
                     cldfra,     & ! cloud fraction current timestep
                     cldfra_old    ! cloud fraction previous timestep
    REAL,  DIMENSION( ims:ime , jms:jme, 5 )                   ,    &
-          INTENT(IN) ::            seasin,dustin 
+          INTENT(IN) ::            seasin
+   REAL,  DIMENSION( ims:ime , jms:jme, 7 )                   ,    &
+          INTENT(IN) ::            dustin
    REAL,  DIMENSION( ims:ime , jms:jme )                   ,    &
           INTENT(OUT) ::                                      &
                                                      dep_vel_o3
@@ -155,8 +158,9 @@ CONTAINS
                 dustdrydep_4, dustdrydep_5, depvelocity
    REAL, DIMENSION( ims:ime, jms:jme ), INTENT(INOUT) ::        &
                dustgraset_1,dustgraset_2,dustgraset_3,          &
-               dustgraset_4,dustgraset_5,                       &
-               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5                 
+               dustgraset_4,dustgraset_5,dustgraset_6,dustgraset_7, &
+               setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,    &
+               setvel_6,setvel_7
    INTEGER, INTENT(IN)  ::     imod
    
 !--- deposition and emissions stuff
@@ -1394,8 +1398,9 @@ CONTAINS
          chem,rho_phy,dz8w,p8w,p_phy,         &
          dustin,seasin,dx,g, &
          dustgraset_1,dustgraset_2,dustgraset_3,                           &
-         dustgraset_4,dustgraset_5,                                        &
-         setvel_1,setvel_2,setvel_3,setvel_4,setvel_5, imod,               &        
+         dustgraset_4,dustgraset_5,dustgraset_6,dustgraset_7,              &
+         setvel_1,setvel_2,setvel_3,setvel_4,setvel_5,                     &
+         setvel_6,setvel_7, imod,                                          &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )

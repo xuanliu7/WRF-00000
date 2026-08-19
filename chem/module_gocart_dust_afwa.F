@@ -21,7 +21,8 @@ CONTAINS
          tot_dust,tot_edust,vis_dust,alpha,gamma,smtune,ustune,            &
          srcmask,                                                          &
          frcovbare,                                                        &
-         dpfct,                                                            &        
+         dpfct,                                                            &
+         dust_mineralogy,                                                  &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -36,8 +37,6 @@ CONTAINS
                                   its,ite, jts,jte, kts,kte
    INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
           INTENT(IN   ) ::    isltyp
-   INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
-          INTENT(IN   ) ::    srcmask
 
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
          INTENT(INOUT ) ::                           chem
@@ -48,8 +47,12 @@ CONTAINS
          INTENT(IN   ) ::                            smois   
    REAL, DIMENSION( ims:ime , jms:jme, ndcls )             ,               &
          INTENT(IN   ) ::                            erod,erod_dri
-   REAL, DIMENSION( ims:ime , jms:jme, 5 )                 ,               &
+   REAL, DIMENSION( ims:ime , jms:jme, 7 )                 ,               &
          INTENT(INOUT) ::                            dustin
+   ! dust_mineralogy(i,j,k): mineral mass fraction (0-1) by size bin, flattened
+   ! as k=(mineral-1)*7+bin, 8 minerals x 7 size bins (see Registry.EM_COMMON).
+   REAL, DIMENSION( ims:ime , jms:jme, 56 )                ,               &
+         INTENT(IN   ) ::                            dust_mineralogy
    REAL, DIMENSION( ims:ime , jms:jme )                    ,               &
          INTENT(IN   ) ::                            u10,                  &
                                                      v10,                  &
@@ -63,7 +66,8 @@ CONTAINS
                                                      clay_nga,             &
                                                      sand_nga,             &
                                                      frcovbare,            &
-                                                     dpfct,                &                                                   
+                                                     dpfct,                &
+                                                     srcmask,              &
                                                      snowh
    REAL, DIMENSION( ims:ime , kms:kme , jms:jme )   ,                      &
          INTENT(IN   ) ::                            alt,                  &
@@ -86,7 +90,7 @@ CONTAINS
   REAL*8, DIMENSION (1,1) :: gravsm
   REAL, DIMENSION( ims:ime , jms:jme ) :: clay,sand
   REAL*8, DIMENSION (1,1) :: drylimit
-  REAL*8, DIMENSION (5)   :: tc,bems
+  REAL*8, DIMENSION (7)   :: tc,bems
   REAL*8, DIMENSION (1,1) :: airden,ustar
   REAL*8, DIMENSION (3) :: massfrac
   REAL*8                :: volsm
@@ -104,8 +108,16 @@ CONTAINS
   ! tables (and NTAG) rather than duplicating the tagging block below.
   INTEGER, PARAMETER :: ntag = 2   ! currently: region 1 ("r1"), everything else ("out")
   INTEGER :: itag, nt
-  REAL    :: d_inc(5)
-  INTEGER, DIMENSION(ntag,5) :: p_dust_tag, p_edust_tag
+  REAL    :: d_inc(7)
+  INTEGER, DIMENSION(ntag,7) :: p_dust_tag, p_edust_tag
+
+  ! Mineral-tagged dust: dust_mineralogy(i,j,(mineral-1)*7+bin) gives each
+  ! mineral's mass fraction (0-1) of a bin's dust. p_dust_mineral(bin,mineral)
+  ! maps to the corresponding separately-transported Registry species index
+  ! (dust_<bin>_min<mineral>), independent of the region tagging above.
+  INTEGER, PARAMETER :: nmin = 8   ! number of minerals in DUST_MINERALOGY
+  INTEGER :: mn
+  INTEGER, DIMENSION(7,nmin) :: p_dust_mineral
 
   conver=1.e-9
   converi=1.e9
@@ -118,10 +130,18 @@ CONTAINS
   nmx=ndust
   smx=ngsalt
 
-  p_dust_tag(1,:)  = (/ p_dust_1_r1,  p_dust_2_r1,  p_dust_3_r1,  p_dust_4_r1,  p_dust_5_r1  /)
-  p_dust_tag(2,:)  = (/ p_dust_1_out, p_dust_2_out, p_dust_3_out, p_dust_4_out, p_dust_5_out /)
-  p_edust_tag(1,:) = (/ p_edust1_r1,  p_edust2_r1,  p_edust3_r1,  p_edust4_r1,  p_edust5_r1  /)
-  p_edust_tag(2,:) = (/ p_edust1_out, p_edust2_out, p_edust3_out, p_edust4_out, p_edust5_out /)
+  p_dust_tag(1,:)  = (/ p_dust_1_r1,  p_dust_2_r1,  p_dust_3_r1,  p_dust_4_r1,  p_dust_5_r1,  p_dust_6_r1,  p_dust_7_r1  /)
+  p_dust_tag(2,:)  = (/ p_dust_1_out, p_dust_2_out, p_dust_3_out, p_dust_4_out, p_dust_5_out, p_dust_6_out, p_dust_7_out /)
+  p_edust_tag(1,:) = (/ p_edust1_r1,  p_edust2_r1,  p_edust3_r1,  p_edust4_r1,  p_edust5_r1,  p_edust6_r1,  p_edust7_r1  /)
+  p_edust_tag(2,:) = (/ p_edust1_out, p_edust2_out, p_edust3_out, p_edust4_out, p_edust5_out, p_edust6_out, p_edust7_out /)
+
+  p_dust_mineral(1,:) = (/ p_dust_1_min1, p_dust_1_min2, p_dust_1_min3, p_dust_1_min4, p_dust_1_min5, p_dust_1_min6, p_dust_1_min7, p_dust_1_min8 /)
+  p_dust_mineral(2,:) = (/ p_dust_2_min1, p_dust_2_min2, p_dust_2_min3, p_dust_2_min4, p_dust_2_min5, p_dust_2_min6, p_dust_2_min7, p_dust_2_min8 /)
+  p_dust_mineral(3,:) = (/ p_dust_3_min1, p_dust_3_min2, p_dust_3_min3, p_dust_3_min4, p_dust_3_min5, p_dust_3_min6, p_dust_3_min7, p_dust_3_min8 /)
+  p_dust_mineral(4,:) = (/ p_dust_4_min1, p_dust_4_min2, p_dust_4_min3, p_dust_4_min4, p_dust_4_min5, p_dust_4_min6, p_dust_4_min7, p_dust_4_min8 /)
+  p_dust_mineral(5,:) = (/ p_dust_5_min1, p_dust_5_min2, p_dust_5_min3, p_dust_5_min4, p_dust_5_min5, p_dust_5_min6, p_dust_5_min7, p_dust_5_min8 /)
+  p_dust_mineral(6,:) = (/ p_dust_6_min1, p_dust_6_min2, p_dust_6_min3, p_dust_6_min4, p_dust_6_min5, p_dust_6_min6, p_dust_6_min7, p_dust_6_min8 /)
+  p_dust_mineral(7,:) = (/ p_dust_7_min1, p_dust_7_min2, p_dust_7_min3, p_dust_7_min4, p_dust_7_min5, p_dust_7_min6, p_dust_7_min7, p_dust_7_min8 /)
 
   k=kts
   DO j=jts,jte
@@ -146,12 +166,16 @@ CONTAINS
         tc(3)=0.0
         tc(4)=0.0
         tc(5)=0.0
+        tc(6)=0.0
+        tc(7)=0.0
       ELSE
         tc(1)=chem(i,kts,j,p_dust_1)*conver
         tc(2)=chem(i,kts,j,p_dust_2)*conver
         tc(3)=chem(i,kts,j,p_dust_3)*conver
         tc(4)=chem(i,kts,j,p_dust_4)*conver
         tc(5)=chem(i,kts,j,p_dust_5)*conver
+        tc(6)=chem(i,kts,j,p_dust_6)*conver
+        tc(7)=chem(i,kts,j,p_dust_7)*conver
       END IF
 
       ! Air mass and density at lowest model level.
@@ -315,19 +339,28 @@ CONTAINS
 
       ! --- Tag dust emissions ---
       ! srcmask(i,j) is an exclusive region ID, so each grid cell's dust
-      ! goes to exactly one tagged bucket (itag) -- no fractional weights,
-      ! no risk of double-counting or under-counting mass across buckets.
-      itag = ntag                                ! default bucket: "out" (region 2)
-      IF (srcmask(i,j) == 1) itag = 1             ! region 1 ("r1")
+      ! goes to exactly one tagged bucket (itag)
+      itag = ntag                                    ! default bucket: "out" (region 2)
+      IF (NINT(srcmask(i,j)) == 1) itag = 1           ! region 1 ("r1")
 
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
-      DO nt = 1, 5
+      DO nt = 1, 7
         d_inc(nt) = REAL( bems(nt) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
         chem(i,kts,j,p_dust_tag(itag,nt)) = chem(i,kts,j,p_dust_tag(itag,nt)) + d_inc(nt)
       END DO
 
+      ! --- Mineral-tagged dust (independent of the region tagging above) ---
+      ! Split each bin's emission increment by mineral mass fraction and add
+      ! into the separately-transported dust_<bin>_min<mineral> species.
+      DO nt = 1, 7
+        DO mn = 1, nmin
+          chem(i,kts,j,p_dust_mineral(nt,mn)) = chem(i,kts,j,p_dust_mineral(nt,mn)) &
+                                               + d_inc(nt) * dust_mineralogy(i,j,(mn-1)*7+nt)
+        END DO
+      END DO
+
       IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
-        dustin(i,j,1:5)=tc(1:5)*converi
+        dustin(i,j,1:7)=tc(1:7)*converi
       ELSE IF(config_flags%chem_opt == CB05_SORG_AQ_KPP .or.  &
               config_flags%chem_opt == CB05_SORG_VBS_AQ_KPP) then
 !KW            chem(i,kts,j,p_p25i)=chem(i,kts,j,p_p25i) &
@@ -345,11 +378,13 @@ CONTAINS
          chem(i,kts,j,p_ac0) =  chem(i,kts,j,p_ac0) +  0.03*sum(tc(1:5))*converi*factnuma*soilfac
          chem(i,kts,j,p_corn) =  chem(i,kts,j,p_corn) + 0.97*1.02*sum(tc(1:5))*converi*factnumc*soilfac
       ELSE
-        chem(i,kts,j,p_dust_1)=tc(1)*converi ! tc(1...5) is (kg/kg), p_dust_1...5 (ug/kg)
+        chem(i,kts,j,p_dust_1)=tc(1)*converi ! tc(1...7) is (kg/kg), p_dust_1...7 (ug/kg)
         chem(i,kts,j,p_dust_2)=tc(2)*converi
         chem(i,kts,j,p_dust_3)=tc(3)*converi
         chem(i,kts,j,p_dust_4)=tc(4)*converi
         chem(i,kts,j,p_dust_5)=tc(5)*converi
+        chem(i,kts,j,p_dust_6)=tc(6)*converi
+        chem(i,kts,j,p_dust_7)=tc(7)*converi
       ENDIF
 
       ! Diagnostic dust lofting potential diagnostic calculation
@@ -372,14 +407,16 @@ CONTAINS
      emis_dust(i,1,j,p_edust3)=emis_dust(i,1,j,p_edust3)+bems(3)
      emis_dust(i,1,j,p_edust4)=emis_dust(i,1,j,p_edust4)+bems(4)
      emis_dust(i,1,j,p_edust5)=emis_dust(i,1,j,p_edust5)+bems(5)
+     emis_dust(i,1,j,p_edust6)=emis_dust(i,1,j,p_edust6)+bems(6)
+     emis_dust(i,1,j,p_edust7)=emis_dust(i,1,j,p_edust7)+bems(7)
 
      ! Source-tagged emission diagnostics (same exclusive itag bucket as above)
-     DO nt = 1, 5
+     DO nt = 1, 7
        emis_dust(i,1,j,p_edust_tag(itag,nt)) = emis_dust(i,1,j,p_edust_tag(itag,nt)) + bems(nt)
      END DO
 
      ! Diagnostic accumulated total emitted dust (kg/m2)
-     tot_edust(i,j)=tot_edust(i,j)+(bems(1)+bems(2)+bems(3)+bems(4)+bems(5))
+     tot_edust(i,j)=tot_edust(i,j)+(bems(1)+bems(2)+bems(3)+bems(4)+bems(5)+bems(6)+bems(7))
 
     ENDIF
 
@@ -391,8 +428,13 @@ CONTAINS
     DO k=kts,kte
       tot_dust(i,k,j)=(chem(i,k,j,p_dust_1)+chem(i,k,j,p_dust_2)+       &
                        chem(i,k,j,p_dust_3)+chem(i,k,j,p_dust_4)+       &
-                       chem(i,k,j,p_dust_5))*rho_phy(i,k,j)
+                       chem(i,k,j,p_dust_5)+chem(i,k,j,p_dust_6)+       &
+                       chem(i,k,j,p_dust_7))*rho_phy(i,k,j)
       IF ( tot_dust(i,k,j) .gt. 0. ) THEN
+        ! NOTE: extinction coefficients below are only defined for bins 1-5
+        ! (no Mie-derived coefficient available yet for bins 6/7), so this
+        ! visibility diagnostic reflects fine+coarse (<20um) dust only and
+        ! omits the super-coarse bins' contribution to extinction.
         vis_dust(i,k,j)=MIN(3.912/                                      &
                           ((1.470E-6*chem(i,k,j,p_dust_1)+              &
                             7.877E-7*chem(i,k,j,p_dust_2)+              &
