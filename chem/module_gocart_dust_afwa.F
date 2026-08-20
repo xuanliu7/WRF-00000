@@ -22,6 +22,7 @@ CONTAINS
          srcmask,                                                          &
          frcovbare,                                                        &
          dpfct,                                                            &
+         dust_mineralogy,                                                  &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -48,6 +49,10 @@ CONTAINS
          INTENT(IN   ) ::                            erod,erod_dri
    REAL, DIMENSION( ims:ime , jms:jme, 7 )                 ,               &
          INTENT(INOUT) ::                            dustin
+   ! dust_mineralogy(i,j,k): mineral mass fraction (0-1) by size bin, flattened
+   ! as k=(mineral-1)*7+bin, 8 minerals x 7 size bins (see Registry.EM_COMMON).
+   REAL, DIMENSION( ims:ime , jms:jme, 56 )                ,               &
+         INTENT(IN   ) ::                            dust_mineralogy
    REAL, DIMENSION( ims:ime , jms:jme )                    ,               &
          INTENT(IN   ) ::                            u10,                  &
                                                      v10,                  &
@@ -106,6 +111,14 @@ CONTAINS
   REAL    :: d_inc(7)
   INTEGER, DIMENSION(ntag,7) :: p_dust_tag, p_edust_tag
 
+  ! Mineral-tagged dust: dust_mineralogy(i,j,(mineral-1)*7+bin) gives each
+  ! mineral's mass fraction (0-1) of a bin's dust. p_dust_mineral(bin,mineral)
+  ! maps to the corresponding separately-transported Registry species index
+  ! (dust_<bin>_min<mineral>), independent of the region tagging above.
+  INTEGER, PARAMETER :: nmin = 8   ! number of minerals in DUST_MINERALOGY
+  INTEGER :: mn
+  INTEGER, DIMENSION(7,nmin) :: p_dust_mineral
+
   conver=1.e-9
   converi=1.e9
 
@@ -121,6 +134,14 @@ CONTAINS
   p_dust_tag(2,:)  = (/ p_dust_1_out, p_dust_2_out, p_dust_3_out, p_dust_4_out, p_dust_5_out, p_dust_6_out, p_dust_7_out /)
   p_edust_tag(1,:) = (/ p_edust1_r1,  p_edust2_r1,  p_edust3_r1,  p_edust4_r1,  p_edust5_r1,  p_edust6_r1,  p_edust7_r1  /)
   p_edust_tag(2,:) = (/ p_edust1_out, p_edust2_out, p_edust3_out, p_edust4_out, p_edust5_out, p_edust6_out, p_edust7_out /)
+
+  p_dust_mineral(1,:) = (/ p_dust_1_min1, p_dust_1_min2, p_dust_1_min3, p_dust_1_min4, p_dust_1_min5, p_dust_1_min6, p_dust_1_min7, p_dust_1_min8 /)
+  p_dust_mineral(2,:) = (/ p_dust_2_min1, p_dust_2_min2, p_dust_2_min3, p_dust_2_min4, p_dust_2_min5, p_dust_2_min6, p_dust_2_min7, p_dust_2_min8 /)
+  p_dust_mineral(3,:) = (/ p_dust_3_min1, p_dust_3_min2, p_dust_3_min3, p_dust_3_min4, p_dust_3_min5, p_dust_3_min6, p_dust_3_min7, p_dust_3_min8 /)
+  p_dust_mineral(4,:) = (/ p_dust_4_min1, p_dust_4_min2, p_dust_4_min3, p_dust_4_min4, p_dust_4_min5, p_dust_4_min6, p_dust_4_min7, p_dust_4_min8 /)
+  p_dust_mineral(5,:) = (/ p_dust_5_min1, p_dust_5_min2, p_dust_5_min3, p_dust_5_min4, p_dust_5_min5, p_dust_5_min6, p_dust_5_min7, p_dust_5_min8 /)
+  p_dust_mineral(6,:) = (/ p_dust_6_min1, p_dust_6_min2, p_dust_6_min3, p_dust_6_min4, p_dust_6_min5, p_dust_6_min6, p_dust_6_min7, p_dust_6_min8 /)
+  p_dust_mineral(7,:) = (/ p_dust_7_min1, p_dust_7_min2, p_dust_7_min3, p_dust_7_min4, p_dust_7_min5, p_dust_7_min6, p_dust_7_min7, p_dust_7_min8 /)
 
   k=kts
   DO j=jts,jte
@@ -326,6 +347,16 @@ CONTAINS
       DO nt = 1, 7
         d_inc(nt) = REAL( bems(nt) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
         chem(i,kts,j,p_dust_tag(itag,nt)) = chem(i,kts,j,p_dust_tag(itag,nt)) + d_inc(nt)
+      END DO
+
+      ! --- Mineral-tagged dust (independent of the region tagging above) ---
+      ! Split each bin's emission increment by mineral mass fraction and add
+      ! into the separately-transported dust_<bin>_min<mineral> species.
+      DO nt = 1, 7
+        DO mn = 1, nmin
+          chem(i,kts,j,p_dust_mineral(nt,mn)) = chem(i,kts,j,p_dust_mineral(nt,mn)) &
+                                               + d_inc(nt) * dust_mineralogy(i,j,(mn-1)*7+nt)
+        END DO
       END DO
 
       IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
