@@ -53,11 +53,6 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
   REAL*8,  DIMENSION (1,1,7)          :: graset_dust_r1, grasetvel_dust_r1
   REAL*8,  DIMENSION (1,1,7)          :: graset_dust_out, grasetvel_dust_out
   REAL*8,  DIMENSION (1,1,4)          :: graset_ss,grasetvel_ss
-  ! Settling work arrays for mineral-tagged dust (independent of region
-  ! tagging above); graset_min/grasetvel_min are discarded scratch space,
-  ! not accumulated into any Registry diagnostic.
-  REAL*8,  DIMENSION (1,1,7)          :: graset_min, grasetvel_min
-  REAL*8, DIMENSION (1,1,kte-kts+1,7) :: ddust_min
 
   REAL, INTENT(IN) :: dt,dx,g
   INTEGER          :: kkk,nmx,i,j,k,kk,lmx,iseas,idust
@@ -67,11 +62,6 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
   REAL*8, DIMENSION (1,1,kte-kts+1,7) :: ddust_r1, ddust_out
   REAL*8, DIMENSION (1,1,kte-kts+1,4) :: sea_salt
 
-  ! Mineral-tagged dust lookup table (see module_gocart_dust_afwa.F)
-  INTEGER, PARAMETER :: nmin = 8
-  INTEGER :: mn
-  INTEGER, DIMENSION(7,nmin) :: p_dust_mineral
-  
   INTEGER :: uoc_flag  ! flag for UoC dust schemes
 !
 !   REAL*8, DIMENSION (5), PARAMETER :: den_dust(5)=(/2500.,2650.,2650.,2650.,2650./)
@@ -87,14 +77,6 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
   if (config_flags%dust_opt .eq. 4) uoc_flag = 1
 
   lmx=kte-kts+1
-
-  p_dust_mineral(1,:) = (/ p_dust_1_min1, p_dust_1_min2, p_dust_1_min3, p_dust_1_min4, p_dust_1_min5, p_dust_1_min6, p_dust_1_min7, p_dust_1_min8 /)
-  p_dust_mineral(2,:) = (/ p_dust_2_min1, p_dust_2_min2, p_dust_2_min3, p_dust_2_min4, p_dust_2_min5, p_dust_2_min6, p_dust_2_min7, p_dust_2_min8 /)
-  p_dust_mineral(3,:) = (/ p_dust_3_min1, p_dust_3_min2, p_dust_3_min3, p_dust_3_min4, p_dust_3_min5, p_dust_3_min6, p_dust_3_min7, p_dust_3_min8 /)
-  p_dust_mineral(4,:) = (/ p_dust_4_min1, p_dust_4_min2, p_dust_4_min3, p_dust_4_min4, p_dust_4_min5, p_dust_4_min6, p_dust_4_min7, p_dust_4_min8 /)
-  p_dust_mineral(5,:) = (/ p_dust_5_min1, p_dust_5_min2, p_dust_5_min3, p_dust_5_min4, p_dust_5_min5, p_dust_5_min6, p_dust_5_min7, p_dust_5_min8 /)
-  p_dust_mineral(6,:) = (/ p_dust_6_min1, p_dust_6_min2, p_dust_6_min3, p_dust_6_min4, p_dust_6_min5, p_dust_6_min6, p_dust_6_min7, p_dust_6_min8 /)
-  p_dust_mineral(7,:) = (/ p_dust_7_min1, p_dust_7_min2, p_dust_7_min3, p_dust_7_min4, p_dust_7_min5, p_dust_7_min6, p_dust_7_min7, p_dust_7_min8 /)
 
   do j=jts,jte
     do i=its,ite
@@ -227,40 +209,6 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
              sea_salt(1,1,kk,3)=chem(i,k,j,p_seas_3)
              sea_salt(1,1,kk,4)=chem(i,k,j,p_seas_4)
           ENDDO
-
-          ! ===== SETTLING FOR MINERAL-TAGGED DUST =====
-          ! Independent of region tagging above; each mineral gets its own
-          ! full settling pass since settling() takes one full (nmx-bin)
-          ! column at a time. graset_min/grasetvel_min are scratch and not
-          ! accumulated into any diagnostic (see declaration comment).
-          DO mn = 1, nmin
-             kk = 0
-             DO k = kts,kte
-                kk = kk+1
-                ddust_min(1,1,kk,1)=chem(i,k,j,p_dust_mineral(1,mn))
-                ddust_min(1,1,kk,2)=chem(i,k,j,p_dust_mineral(2,mn))
-                ddust_min(1,1,kk,3)=chem(i,k,j,p_dust_mineral(3,mn))
-                ddust_min(1,1,kk,4)=chem(i,k,j,p_dust_mineral(4,mn))
-                ddust_min(1,1,kk,5)=chem(i,k,j,p_dust_mineral(5,mn))
-                ddust_min(1,1,kk,6)=chem(i,k,j,p_dust_mineral(6,mn))
-                ddust_min(1,1,kk,7)=chem(i,k,j,p_dust_mineral(7,mn))
-             ENDDO
-             CALL settling(1,1,lmx,7,g,dyn_visc,ddust_min,tmp,p_mid,delz, &
-                           imod,graset_min,grasetvel_min, uoc_flag,       &
-                           den_dust,reff_dust,dt,rh,idust,iseas,airden)
-             kk = 0
-             DO k = kts,kte
-                kk = kk+1
-                chem(i,k,j,p_dust_mineral(1,mn))=ddust_min(1,1,kk,1)
-                chem(i,k,j,p_dust_mineral(2,mn))=ddust_min(1,1,kk,2)
-                chem(i,k,j,p_dust_mineral(3,mn))=ddust_min(1,1,kk,3)
-                chem(i,k,j,p_dust_mineral(4,mn))=ddust_min(1,1,kk,4)
-                chem(i,k,j,p_dust_mineral(5,mn))=ddust_min(1,1,kk,5)
-                chem(i,k,j,p_dust_mineral(6,mn))=ddust_min(1,1,kk,6)
-                chem(i,k,j,p_dust_mineral(7,mn))=ddust_min(1,1,kk,7)
-             ENDDO
-          ENDDO
-          ! =============================================
        ENDIF
 
         !graset_dust in [ug/kg][m/s]
