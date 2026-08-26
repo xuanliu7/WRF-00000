@@ -38,6 +38,9 @@ Module module_data_gocart_dust
   ! distribution: median 127um, sigma_agg=2.95). All 7 values normalized
   ! to sum to 1.
   real*8, DIMENSION (ndust), PARAMETER :: distr_dust=(/9.61D-2,6.28D-2,9.13D-2,1.895D-1,1.768D-1,2.05D-1,1.785D-1/)
+  ! Original Kok (2011) 5-bin weights, used when namelist dust_supercoarse_opt=0
+  ! (bins 6-7 never emit in that mode; see gocart_dust_afwa_driver).
+  real*8, DIMENSION (5), PARAMETER :: distr_dust_orig5=(/1.074D-1,1.012D-1,2.078D-1,4.817D-1,1.019D-1/)
 ! real*8, DIMENSION (ndust), PARAMETER :: lo_dust=(/0.1D-6,1.0D-6,1.8D-6,3.0D-6,6.0D-6,10.0D-6,17.5D-6/)
 ! real*8, DIMENSION (ndust), PARAMETER :: up_dust=(/1.0D-6,1.8D-6,3.0D-6,6.0D-6,10.0D-6,17.5D-6,31.25D-6/)
 

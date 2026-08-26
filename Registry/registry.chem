@@ -3937,6 +3937,10 @@ rconfig   integer     emiss_opt           namelist,chem          max_domains    
 rconfig   integer     emiss_opt_vol       namelist,chem          max_domains    0       rh    "emiss_opt_vol"       ""      ""
 rconfig   integer     dust_opt            namelist,chem          1              0       rh    "dust_opt"            ""      ""
 rconfig   integer     dust_schme          namelist,chem          1              2       rh    "dust_schme"       ""      ""
+rconfig   integer     dust_supercoarse_opt namelist,chem         1              0       rh    "dust_supercoarse_opt" "0=original 5-bin AFWA dust (Kok 2011, 8 optical bins); 1=7-bin with super-coarse bins 6-7 (Meng 2022) + 11 optical bins" ""
+rconfig   integer     dust_mineral_opt    namelist,chem          1              0       rh    "dust_mineral_opt"    "0=off (default); 1=tag emitted dust by mineral composition (dust_<bin>_min<mineral> species) using DUST_MINERALOGY. Independent of dust_supercoarse_opt -- works with either 5 or 7 dust bins" ""
+rconfig   integer     dust_srctag_opt     namelist,chem          1              0       rh    "dust_srctag_opt"     "0=off (default, no region tagging, dust_<bin>_r1/dust_<bin>_out stay zero); 1=tag emitted dust by source region (srcmask) into dust_<bin>_r1/dust_<bin>_out" ""
+rconfig   integer     dust_afwa_phys_opt  namelist,chem          1              0       rh    "dust_afwa_phys_opt"  "0=original AFWA physics (MB95 sandblasting efficiency, no bare soil fraction, no drag partition); 1=updated physics (Ito and Kok 2017 sandblasting efficiency, bare soil fraction (FRCOVBARE), hybrid drag partition (DPFCT))" ""
 
 #renchuanhua rch added
 rconfig   integer     nh3emis_opt         namelist,chem          1              0       rh    "nh3emis_opt"         ""      ""

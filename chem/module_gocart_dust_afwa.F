@@ -118,16 +118,26 @@ CONTAINS
   INTEGER, PARAMETER :: nmin = 8   ! number of minerals in DUST_MINERALOGY
   INTEGER :: mn
   INTEGER, DIMENSION(7,nmin) :: p_dust_mineral
+  REAL*8, DIMENSION(7) :: distr_dust_use
 
   conver=1.e-9
   converi=1.e9
 
-  ! Number of dust bins
+  ! Number of dust bins. dust_supercoarse_opt=0 (default) reproduces the
+  ! original 5-bin AFWA scheme (Kok 2011 weights, bins 6-7 never emit);
+  ! =1 uses all 7 bins with the Meng (2022) BFT-supercoarse weights.
+  ! Region (srcmask) tagging is unaffected either way.
 
   imx=1
   jmx=1
   lmx=1
-  nmx=ndust
+  IF (config_flags%dust_supercoarse_opt == 1) THEN
+    nmx=ndust
+    distr_dust_use(1:ndust) = distr_dust(1:ndust)
+  ELSE
+    nmx=5
+    distr_dust_use(1:5) = distr_dust_orig5(1:5)
+  ENDIF
   smx=ngsalt
 
   p_dust_tag(1,:)  = (/ p_dust_1_r1,  p_dust_2_r1,  p_dust_3_r1,  p_dust_4_r1,  p_dust_5_r1,  p_dust_6_r1,  p_dust_7_r1  /)
@@ -335,29 +345,40 @@ CONTAINS
       call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
                        erodtot, ilwi, gravsm, volsm, airden,dz_lowest,   &
                        bems, ustart, g, drylimit, alpha, gamma, smois_opt, &
-                       frcovbare(i,j), dpfct(i,j))
-
-      ! --- Tag dust emissions ---
-      ! srcmask(i,j) is an exclusive region ID, so each grid cell's dust
-      ! goes to exactly one tagged bucket (itag)
-      itag = ntag                                    ! default bucket: "out" (region 2)
-      IF (NINT(srcmask(i,j)) == 1) itag = 1           ! region 1 ("r1")
+                       frcovbare(i,j), dpfct(i,j), distr_dust_use(1:nmx), &
+                       config_flags%dust_afwa_phys_opt)
 
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
+      ! d_inc is computed unconditionally (cheap, and needed by both the
+      ! region- and mineral-tagging blocks below).
       DO nt = 1, 7
         d_inc(nt) = REAL( bems(nt) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
-        chem(i,kts,j,p_dust_tag(itag,nt)) = chem(i,kts,j,p_dust_tag(itag,nt)) + d_inc(nt)
       END DO
 
-      ! --- Mineral-tagged dust (independent of the region tagging above) ---
+      ! --- Tag dust emissions by source region (namelist dust_srctag_opt) ---
+      ! srcmask(i,j) is an exclusive region ID, so each grid cell's dust
+      ! goes to exactly one tagged bucket (itag)
+      IF (config_flags%dust_srctag_opt == 1) THEN
+        itag = ntag                                    ! default bucket: "out" (region 2)
+        IF (NINT(srcmask(i,j)) == 1) itag = 1           ! region 1 ("r1")
+
+        DO nt = 1, 7
+          chem(i,kts,j,p_dust_tag(itag,nt)) = chem(i,kts,j,p_dust_tag(itag,nt)) + d_inc(nt)
+        END DO
+      ENDIF
+
+      ! --- Mineral-tagged dust (namelist dust_mineral_opt; independent of the
+      ! region tagging above) ---
       ! Split each bin's emission increment by mineral mass fraction and add
       ! into the separately-transported dust_<bin>_min<mineral> species.
+      IF (config_flags%dust_mineral_opt == 1) THEN
       DO nt = 1, 7
         DO mn = 1, nmin
           chem(i,kts,j,p_dust_mineral(nt,mn)) = chem(i,kts,j,p_dust_mineral(nt,mn)) &
                                                + d_inc(nt) * dust_mineralogy(i,j,(mn-1)*7+nt)
         END DO
       END DO
+      ENDIF
 
       IF(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
         dustin(i,j,1:7)=tc(1:7)*converi
@@ -407,16 +428,18 @@ CONTAINS
      emis_dust(i,1,j,p_edust3)=emis_dust(i,1,j,p_edust3)+bems(3)
      emis_dust(i,1,j,p_edust4)=emis_dust(i,1,j,p_edust4)+bems(4)
      emis_dust(i,1,j,p_edust5)=emis_dust(i,1,j,p_edust5)+bems(5)
-     emis_dust(i,1,j,p_edust6)=emis_dust(i,1,j,p_edust6)+bems(6)
-     emis_dust(i,1,j,p_edust7)=emis_dust(i,1,j,p_edust7)+bems(7)
+     IF (nmx .ge. 6) emis_dust(i,1,j,p_edust6)=emis_dust(i,1,j,p_edust6)+bems(6)
+     IF (nmx .ge. 7) emis_dust(i,1,j,p_edust7)=emis_dust(i,1,j,p_edust7)+bems(7)
 
      ! Source-tagged emission diagnostics (same exclusive itag bucket as above)
-     DO nt = 1, 7
-       emis_dust(i,1,j,p_edust_tag(itag,nt)) = emis_dust(i,1,j,p_edust_tag(itag,nt)) + bems(nt)
-     END DO
+     IF (config_flags%dust_srctag_opt == 1) THEN
+       DO nt = 1, nmx
+         emis_dust(i,1,j,p_edust_tag(itag,nt)) = emis_dust(i,1,j,p_edust_tag(itag,nt)) + bems(nt)
+       END DO
+     ENDIF
 
      ! Diagnostic accumulated total emitted dust (kg/m2)
-     tot_edust(i,j)=tot_edust(i,j)+(bems(1)+bems(2)+bems(3)+bems(4)+bems(5)+bems(6)+bems(7))
+     tot_edust(i,j)=tot_edust(i,j)+SUM(bems(1:nmx))
 
     ENDIF
 
@@ -455,7 +478,7 @@ CONTAINS
   SUBROUTINE source_dust(imx, jmx, lmx, nmx, smx, dt1, tc, ustar, massfrac,&
                          erod, ilwi, gravsm, volsm, airden, dz_lowest,     &
                          bems, ustart, g0, drylimit, alpha, gamma, smois_opt, &
-                         frcovbare, dpfct)
+                         frcovbare, dpfct, distr_dust_use, dust_afwa_phys_opt)
 
   ! ****************************************************************************
   ! *  Evaluate the source of each dust particles size bin by soil emission  
@@ -542,6 +565,11 @@ CONTAINS
   REAL*8, INTENT(IN)    :: volsm
   REAL,   INTENT(IN)  :: dz_lowest
 
+  ! Mass-fraction weight per dust bin, chosen by the caller based on
+  ! namelist dust_supercoarse_opt (5-bin Kok 2011 vs 7-bin Meng 2022
+  ! weights; see gocart_dust_afwa_driver).
+  REAL*8, INTENT(IN)    :: distr_dust_use(nmx)
+
   REAL*8    :: den(smx), diam(smx)
 ! REAL*8    :: dvol(nmx), dlndp(nmx)
 ! REAL*8    :: distr_dust(nmx)
@@ -560,6 +588,11 @@ CONTAINS
   REAL, INTENT(IN)  :: alpha
   REAL, PARAMETER :: betamax=5.25E-4
   REAL*8 :: beta
+
+! 0=original AFWA physics (MB95 sandblasting efficiency, no bare soil
+! fraction, no drag partition); 1=updated physics (Ito and Kok 2017
+! sandblasting efficiency, FRCOVBARE, DPFCT). See namelist dust_afwa_phys_opt.
+  INTEGER, INTENT(IN)   :: dust_afwa_phys_opt
 
 ! Experimental optional exponential tuning constant for erodibility.
 ! 0 < gamma < 1 -> more relative impact by low erodibility regions.
@@ -624,9 +657,14 @@ CONTAINS
       DO j = 1,jmx
         rhoa = airden(i,j,1)*1.0D-3     ! (g cm^-3)
 
-        ! Apply drag partition factor to friction velocity
-        ustar_s = ustar(i,j) * dpfct(i,j) 
- 
+        ! Apply drag partition factor to friction velocity (only when
+        ! dust_afwa_phys_opt=1; original AFWA physics uses raw ustar).
+        IF (dust_afwa_phys_opt == 1) THEN
+          ustar_s = ustar(i,j) * dpfct(i,j)
+        ELSE
+          ustar_s = ustar(i,j)
+        ENDIF
+
         ! Threshold friction velocity as a function of the dust density and
         ! diameter from Bagnold (1941) (m s^-1).
 
@@ -683,19 +721,27 @@ CONTAINS
         ! would be huge dust producers, which is generally not the case.
         ! Equation derived from wind-tunnel experiments (see MB95).
  
-        ! beta=10**(13.6*massfrac(1)-6.0)  ! (unitless)
-        ! IF (beta .gt. betamax) THEN
-        !   beta=betamax
-        ! ENDIF
-        
-        ! Use Eq. 13 and Eq. 14 from Ito and Kok, JGR, 2017 
-        IF (massfrac(1) .lt. 0.2) THEN
-          beta = 1.0 / (1.0 + (0.4 - massfrac(1)) - massfrac(2))
+        IF (dust_afwa_phys_opt == 1) THEN
+          ! Use Eq. 13 and Eq. 14 from Ito and Kok, JGR, 2017
+          IF (massfrac(1) .lt. 0.2) THEN
+            beta = 1.0 / (1.0 + (0.4 - massfrac(1)) - massfrac(2))
+          ELSE
+            beta = 1.0 / (1.0 + massfrac(1) - massfrac(2))
+          ENDIF
         ELSE
-          beta = 1.0 / (1.0 + massfrac(1) - massfrac(2))
+          ! Original MB95 wind-tunnel-derived formula
+          beta=10**(13.6*massfrac(1)-6.0)  ! (unitless)
+          IF (beta .gt. betamax) THEN
+            beta=betamax
+          ENDIF
         ENDIF
 
-        emit=emit+salt*(erod(i,j)**gamma)*alpha*beta*frcovbare(i,j)    ! (kg m^-2 s^-1)
+        ! Bare soil fraction correction only applied when dust_afwa_phys_opt=1.
+        IF (dust_afwa_phys_opt == 1) THEN
+          emit=emit+salt*(erod(i,j)**gamma)*alpha*beta*frcovbare(i,j)    ! (kg m^-2 s^-1)
+        ELSE
+          emit=emit+salt*(erod(i,j)**gamma)*alpha*beta    ! (kg m^-2 s^-1)
+        ENDIF
       END DO
     END DO
   END DO                                 ! End do over saltation bins
@@ -741,7 +787,7 @@ CONTAINS
 
         ! Calculate total mass emitted
 
-        dsrc = emit*distr_dust(n)*dt1  ! (kg m^-2) per dt1
+        dsrc = emit*distr_dust_use(n)*dt1  ! (kg m^-2) per dt1
         IF (dsrc < 0.0) dsrc = 0.0
 
         ! Update dust mixing ratio at first model level.

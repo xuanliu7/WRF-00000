@@ -298,6 +298,7 @@
           swrefindx,swrefindx_core, swrefindx_shell,                   &
           lwrefindx,lwrefindx_core, lwrefindx_shell,                   &
           uoc_flag,                                                    & ! mklose
+          config_flags%dust_supercoarse_opt,                           &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &
           its,ite, jts,jte, kts,kte                                    )
@@ -3544,6 +3545,7 @@ END subroutine optical_prep_modal_soa_vbs
           swrefindx,swrefindx_core, swrefindx_shell,                   &
           lwrefindx,lwrefindx_core, lwrefindx_shell,                   &
           uoc,                                                         & ! mklose
+          dust_supercoarse_opt,                                        &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &
           its,ite, jts,jte, kts,kte                                    )
@@ -3566,6 +3568,10 @@ END subroutine optical_prep_modal_soa_vbs
    INTEGER, INTENT(IN   ) :: its,ite, jts,jte, kts,kte, nbin_o
    INTEGER, INTENT(IN   ) :: ims,ime, jms,jme, kms,kme
    INTEGER, INTENT(IN   ) :: ids,ide, jds,jde, kds,kde
+   ! 0=original 5-bin AFWA dust (8 optical bins, this routine's original
+   ! behavior); 1=7-bin with super-coarse bins 6-7 (11 optical bins, covering
+   ! up to 62.5um diameter). See namelist dust_supercoarse_opt.
+   INTEGER, INTENT(IN   ) :: dust_supercoarse_opt
 
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),             &
          INTENT(IN ) ::  chem
@@ -3632,7 +3638,7 @@ END subroutine optical_prep_modal_soa_vbs
          dp_dry_a  , dp_wet_a  , num_a     , dp_bc_a
    real  ifac, jfac, cfac
    integer ns
-   real  dgnum_um,drydens,duma,dlo_um,dhi_um,dgmin,sixpi,ss1,ss2,ss3,dtemp
+   real  dgnum_um,drydens,duma,dlo_um,dmid_um,dhi_um,dgmin,sixpi,ss1,ss2,ss3,dtemp
    integer  iflag
    real, dimension(1:nbin_o) :: xnum_secti,xnum_sectj,xnum_sectc
    real, dimension(1:nbin_o) :: xmas_secti,xmas_sectj,xmas_sectc
@@ -3640,9 +3646,17 @@ END subroutine optical_prep_modal_soa_vbs
    REAL, PARAMETER :: FRAC2Aitken=0.25   ! Fraction of modal mass in Aitken mode - applied globally to each species
 
 ! 7/21/09  SAM variables needed to convert GOCART sectional dust and seasalt to MOZAIC sections
-   real  dgnum, dhi,  dlo, xlo, xhi, dxbin, relh_frc
+   real  dgnum, dhi,  dlo, dmid, xlo, xmid, xhi, dxbin_fine, dxbin_coarse, relh_frc
    real dlo_sectm(nbin_o), dhi_sectm(nbin_o)
-   integer, parameter :: nbin_omoz=8
+   ! nbin_fine=8 preserves the original 0.0390625-10um fine-mode resolution
+   ! exactly (sulfate/BC/OC/fine dust unaffected); bins nbin_fine+1..nbin_o
+   ! extend the grid from dmid_um to dhi_um to cover AFWA super-coarse dust
+   ! bins 6-7 without touching the original 8 bins' width.
+   integer, parameter :: nbin_fine=8
+   ! nbin_omoz sizes the SAVE'd fraction arrays below; must be a compile-time
+   ! constant large enough for the largest nbin_o any caller passes in
+   ! (11, when dust_supercoarse_opt=1; see optical_driver.F).
+   integer, parameter :: nbin_omoz=11
    real, save :: seasfrc_goc8bin(4,nbin_omoz)   ! GOCART seasalt size distibution - mass fracs in MOSAIC 8-bins
    real, save :: dustfrc_goc8bin(ndust,nbin_omoz)   ! GOCART dust size distibution - mass fracs in MOSAIC 8-bins
    real  mass_bc1 , mass_bc2 , vol_bc2  , mass_bc1j , mass_bc2j,  &
@@ -3671,27 +3685,51 @@ END subroutine optical_prep_modal_soa_vbs
 !
       sixpi=6.0/3.14159265359
       dlo_um=0.0390625
-      dhi_um=10.0
+      dmid_um=10.0
+      ! dhi_um is only widened beyond the original 10um cap when nbin_o
+      ! exceeds nbin_fine (i.e. dust_supercoarse_opt=1); otherwise this
+      ! routine reproduces the original single-segment 8-bin grid exactly.
+      if (nbin_o .gt. nbin_fine) then
+        dhi_um=62.5
+      else
+        dhi_um=dmid_um
+      endif
       drydens=1.8
       iflag=2
       duma=1.0
       dgmin=1.0e-07 ! in (cm)
       dtemp=dlo_um
-      do isize=1,nbin_o
+      do isize=1,nbin_fine
         xdia_um(isize)=(dtemp+dtemp*2.0)/2.0
         dtemp=dtemp*2.0
       enddo
+      if (nbin_o .gt. nbin_fine) then
+        dtemp=dmid_um
+        do isize=nbin_fine+1,nbin_o
+          xdia_um(isize)=(dtemp+dtemp*(dhi_um/dmid_um)**(1.0/REAL(nbin_o-nbin_fine)))/2.0
+          dtemp=dtemp*(dhi_um/dmid_um)**(1.0/REAL(nbin_o-nbin_fine))
+        enddo
+      endif
         if (kcall .eq. 0) then
 ! 7/21/09 SAM calculate sectional contributions from GOCART seasalt and dust
         dlo = dlo_um*1.0e-6
-        dhi = dhi_um*1.0e-6
+        dmid = dmid_um*1.0e-6
         xlo = log( dlo )
-        xhi = log( dhi )
-        dxbin = (xhi - xlo)/nbin_o
-        do n = 1, nbin_o
-            dlo_sectm(n) = exp( xlo + dxbin*(n-1) )
-            dhi_sectm(n) = exp( xlo + dxbin*n )
+        xmid = log( dmid )
+        dxbin_fine = (xmid - xlo)/nbin_fine
+        do n = 1, nbin_fine
+            dlo_sectm(n) = exp( xlo + dxbin_fine*(n-1) )
+            dhi_sectm(n) = exp( xlo + dxbin_fine*n )
         end do
+        if (nbin_o .gt. nbin_fine) then
+          dhi = dhi_um*1.0e-6
+          xhi = log( dhi )
+          dxbin_coarse = (xhi - xmid)/(nbin_o-nbin_fine)
+          do n = nbin_fine+1, nbin_o
+            dlo_sectm(n) = exp( xmid + dxbin_coarse*(n-nbin_fine-1) )
+            dhi_sectm(n) = exp( xmid + dxbin_coarse*(n-nbin_fine) )
+          end do
+        endif
 !  real, save :: seasfrc_goc8bin(4,nbin_o)   ! GOCART seasalt size distibution - mass fracs in MOSAIC 8-bins
 !  real, save :: dustfrc_goc8bin(ndust,nbin_o)   ! GOCART dust size distibution - mass fracs in MOSAIC 8-bins
 !  USE module_data_gocart_seas
@@ -3954,21 +3992,33 @@ END subroutine optical_prep_modal_soa_vbs
 !!      ss3=(sixpi*vol_ai/(num_ai*ss2))**0.3333333
 !!      dgnum_um=amax1(dgmin,ss3)*1.0e+04
         dgnum_um=dginin*1.E6
-        call sect02(dgnum_um,sginin,drydens,iflag,duma,nbin_o,dlo_um,dhi_um, &
-          xnum_secti,xmas_secti)
+        call sect02(dgnum_um,sginin,drydens,iflag,duma,nbin_fine,dlo_um,dmid_um, &
+          xnum_secti(1:nbin_fine),xmas_secti(1:nbin_fine))
 !!      ss1=log(sginia)
-!!      ss2=exp(ss1*ss1*36.0/8.0) 
+!!      ss2=exp(ss1*ss1*36.0/8.0)
 !!      ss3=(sixpi*vol_aj/(num_aj*ss2))**0.3333333
 !!      dgnum_um=amax1(dgmin,ss3)*1.0e+04
         dgnum_um=dginia*1.E6
-        call sect02(dgnum_um,sginia,drydens,iflag,duma,nbin_o,dlo_um,dhi_um, &
-          xnum_sectj,xmas_sectj)
+        call sect02(dgnum_um,sginia,drydens,iflag,duma,nbin_fine,dlo_um,dmid_um, &
+          xnum_sectj(1:nbin_fine),xmas_sectj(1:nbin_fine))
 !!      ss1=log(sginic)
-!!      ss2=exp(ss1*ss1*36.0/8.0) 
+!!      ss2=exp(ss1*ss1*36.0/8.0)
 !!      ss3=(sixpi*vol_ac/(num_ac*ss2))**0.3333333
         dgnum_um=dginic*1.E6
-        call sect02(dgnum_um,sginic,drydens,iflag,duma,nbin_o,dlo_um,dhi_um, &
-          xnum_sectc,xmas_sectc)
+        call sect02(dgnum_um,sginic,drydens,iflag,duma,nbin_fine,dlo_um,dmid_um, &
+          xnum_sectc(1:nbin_fine),xmas_sectc(1:nbin_fine))
+
+        ! Modal species (sulfate/nitrate/ammonium/OC/BC) never extend past
+        ! the original fine-mode grid; bins beyond nbin_fine (super-coarse
+        ! dust only) get zero modal mass.
+        if (nbin_o .gt. nbin_fine) then
+          xnum_secti(nbin_fine+1:nbin_o) = 0.
+          xnum_sectj(nbin_fine+1:nbin_o) = 0.
+          xnum_sectc(nbin_fine+1:nbin_o) = 0.
+          xmas_secti(nbin_fine+1:nbin_o) = 0.
+          xmas_sectj(nbin_fine+1:nbin_o) = 0.
+          xmas_sectc(nbin_fine+1:nbin_o) = 0.
+        endif
 
         do isize = 1, nbin_o
           xdia_cm(isize)=xdia_um(isize)*1.0e-04
@@ -3997,7 +4047,9 @@ END subroutine optical_prep_modal_soa_vbs
        end do
        n = 0
        mass_soil = 0.0
-       do m =p_dust_1,  p_dust_1+ndust-2 ! loop over dust size bins less than 10 um diam
+       ! dust_supercoarse_opt=0: only bins 1-5 (Kok 2011) are ever emitted,
+       ! so limit the loop to 5 bins even though ndust=7; =1: all 7 bins.
+       do m =p_dust_1,  p_dust_1+merge(ndust,5,dust_supercoarse_opt==1)-1
        n = n+1
         mass_soil=mass_soil+dustfrc_goc8bin(n,isize)*chem(i,k,j,m)
        end do

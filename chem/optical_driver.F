@@ -142,9 +142,21 @@
 ! SHELL: shell-core approach, placeholder
 !
    select case (config_flags%chem_opt)
+   case ( GOCART_SIMPLE )
+     ! GOCART_SIMPLE gets 3 extra optical bins (11 vs the shared default of 8)
+     ! to cover the AFWA super-coarse dust bins (6-7, 20-62.5um diameter)
+     ! without coarsening the original 8 bins' resolution for the other
+     ! species (see optical_prep_gocart in module_optical_averaging.F).
+     ! Only when dust_supercoarse_opt=1; =0 reproduces the original 8-bin
+     ! GOCART_SIMPLE optics exactly.
+     if (config_flags%dust_supercoarse_opt == 1) then
+       nbin_o = 11
+     else
+       nbin_o = 8
+     endif
    case ( RADM2SORG, RACM_ESRLSORG_KPP, RADM2SORG_KPP, RADM2SORG_AQ, RADM2SORG_AQCHEM, &
           GOCARTRACM_KPP,      GOCARTRADM2,      &
-          GOCART_SIMPLE,       RACMSORG_KPP,       RACMSORG_AQ,      RACMSORG_AQCHEM_KPP, &
+          RACMSORG_KPP,       RACMSORG_AQ,      RACMSORG_AQCHEM_KPP, &
           RACM_ESRLSORG_AQCHEM_KPP, RACM_SOA_VBS_KPP, RACM_SOA_VBS_AQCHEM_KPP,            &
           RACM_SOA_VBS_HET_KPP, CBMZSORG, CBMZSORG_AQ, MOZCART_KPP, T1_MOZCART_KPP,     &
           CBMZ_CAM_MAM3_NOAQ,  CBMZ_CAM_MAM7_NOAQ,  CBMZ_CAM_MAM3_AQ,  CBMZ_CAM_MAM7_AQ, &

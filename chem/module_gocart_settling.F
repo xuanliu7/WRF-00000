@@ -86,6 +86,15 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
   uoc_flag = 0
   if (config_flags%dust_opt .eq. 4) uoc_flag = 1
 
+  ! Effective number of dust bins to settle: matches the bin count actually
+  ! emitted by gocart_dust_afwa_driver under the same namelist option (0=
+  ! original 5-bin scheme, 1=7-bin with super-coarse bins 6-7).
+  IF (config_flags%dust_supercoarse_opt == 1) THEN
+    nmx = 7
+  ELSE
+    nmx = 5
+  ENDIF
+
   lmx=kte-kts+1
 
   p_dust_mineral(1,:) = (/ p_dust_1_min1, p_dust_1_min2, p_dust_1_min3, p_dust_1_min4, p_dust_1_min5, p_dust_1_min6, p_dust_1_min7, p_dust_1_min8 /)
@@ -157,25 +166,32 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
          ENDDO
        ENDIF
        graset_dust(1,1,:)=0.
-       graset_ss(1,1,:)=0.                                           
+       ! grasetvel_dust is INTENT(OUT)-only in settling() (never read back
+       ! in), so bins beyond nmx must be explicitly zeroed here or
+       ! setvel_6/setvel_7 below would read stale/uninitialized values
+       ! when nmx=5.
+       grasetvel_dust(1,1,:)=0.
+       graset_ss(1,1,:)=0.
        ! Initialize tagged species deposition arrays
        graset_dust_r1(1,1,:)=0.
        graset_dust_out(1,1,:)=0.
 
        iseas=0
        idust=1
-       CALL settling(1,1,lmx,7,g,dyn_visc,ddust,tmp,p_mid,delz,       &
+       CALL settling(1,1,lmx,nmx,g,dyn_visc,ddust,tmp,p_mid,delz,     &
                      imod,graset_dust,grasetvel_dust, uoc_flag,       &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
 
-       ! ===== ADD SETTLING FOR TAGGED SPECIES =====
-       CALL settling(1,1,lmx,7,g,dyn_visc,ddust_r1,tmp,p_mid,delz,  &
+       ! ===== ADD SETTLING FOR TAGGED SPECIES (namelist dust_srctag_opt) =====
+       IF (config_flags%dust_srctag_opt == 1) THEN
+       CALL settling(1,1,lmx,nmx,g,dyn_visc,ddust_r1,tmp,p_mid,delz, &
                      imod,graset_dust_r1,grasetvel_dust_r1, uoc_flag, &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
 
-       CALL settling(1,1,lmx,7,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
+       CALL settling(1,1,lmx,nmx,g,dyn_visc,ddust_out,tmp,p_mid,delz, &
                      imod,graset_dust_out,grasetvel_dust_out, uoc_flag, &
                      den_dust,reff_dust,dt,rh,idust,iseas,airden)
+       ENDIF
        ! ===========================================
 
        IF (config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) THEN
@@ -228,11 +244,12 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
              sea_salt(1,1,kk,4)=chem(i,k,j,p_seas_4)
           ENDDO
 
-          ! ===== SETTLING FOR MINERAL-TAGGED DUST =====
+          ! ===== SETTLING FOR MINERAL-TAGGED DUST (namelist dust_mineral_opt) =====
           ! Independent of region tagging above; each mineral gets its own
           ! full settling pass since settling() takes one full (nmx-bin)
           ! column at a time. graset_min/grasetvel_min are scratch and not
           ! accumulated into any diagnostic (see declaration comment).
+          IF (config_flags%dust_mineral_opt == 1) THEN
           DO mn = 1, nmin
              kk = 0
              DO k = kts,kte
@@ -245,7 +262,7 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
                 ddust_min(1,1,kk,6)=chem(i,k,j,p_dust_mineral(6,mn))
                 ddust_min(1,1,kk,7)=chem(i,k,j,p_dust_mineral(7,mn))
              ENDDO
-             CALL settling(1,1,lmx,7,g,dyn_visc,ddust_min,tmp,p_mid,delz, &
+             CALL settling(1,1,lmx,nmx,g,dyn_visc,ddust_min,tmp,p_mid,delz, &
                            imod,graset_min,grasetvel_min, uoc_flag,       &
                            den_dust,reff_dust,dt,rh,idust,iseas,airden)
              kk = 0
@@ -260,6 +277,7 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
                 chem(i,k,j,p_dust_mineral(7,mn))=ddust_min(1,1,kk,7)
              ENDDO
           ENDDO
+          ENDIF
           ! =============================================
        ENDIF
 
