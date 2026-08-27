@@ -299,6 +299,7 @@
           lwrefindx,lwrefindx_core, lwrefindx_shell,                   &
           uoc_flag,                                                    & ! mklose
           config_flags%dust_supercoarse_opt,                           &
+          config_flags%dust_mineral_opt,                               &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &
           its,ite, jts,jte, kts,kte                                    )
@@ -3545,7 +3546,7 @@ END subroutine optical_prep_modal_soa_vbs
           swrefindx,swrefindx_core, swrefindx_shell,                   &
           lwrefindx,lwrefindx_core, lwrefindx_shell,                   &
           uoc,                                                         & ! mklose
-          dust_supercoarse_opt,                                        &
+          dust_supercoarse_opt, dust_mineral_opt,                      &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &
           its,ite, jts,jte, kts,kte                                    )
@@ -3563,6 +3564,8 @@ END subroutine optical_prep_modal_soa_vbs
    USE module_data_gocart_dust, only:  ndust, reff_dust, den_dust,ra_dust,rb_dust
 !  real*8, DIMENSION (5), PARAMETER :: den_dust(5)=(/2500.,2650.,2650.,2650.,2650./)
 !  real*8, DIMENSION (5), PARAMETER :: reff_dust(5)=(/0.73D-6,1.4D-6,2.4D-6,4.5D-6,8.0D-6/)
+   USE module_data_mineral_cri, only: nmineral, mineral_fe, dens_mineral, &
+        refrsw_mineral, refisw_mineral, refrlw_mineral, refilw_mineral
 
 !
    INTEGER, INTENT(IN   ) :: its,ite, jts,jte, kts,kte, nbin_o
@@ -3572,6 +3575,11 @@ END subroutine optical_prep_modal_soa_vbs
    ! behavior); 1=7-bin with super-coarse bins 6-7 (11 optical bins, covering
    ! up to 62.5um diameter). See namelist dust_supercoarse_opt.
    INTEGER, INTENT(IN   ) :: dust_supercoarse_opt
+   ! 0=bulk dust CRI (refrsw_dust/refrlw_dust, this routine's original
+   ! behavior); 1=per-bin dust CRI from transported dust_<bin>_min<mineral>
+   ! mass via Maxwell-Garnett (iron oxide inclusion in a volume-weighted-
+   ! mean host of the other 7 minerals). See namelist dust_mineral_opt.
+   INTEGER, INTENT(IN   ) :: dust_mineral_opt
 
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),             &
          INTENT(IN ) ::  chem
@@ -3666,6 +3674,35 @@ END subroutine optical_prep_modal_soa_vbs
    integer, save :: kcall
    data  kcall / 0 /
    integer :: uoc
+
+   ! Mineral-tagged dust CRI (namelist dust_mineral_opt=1): p_dust_mineral
+   ! maps (bin,mineral) to the transported dust_<bin>_min<mineral> Registry
+   ! index (see module_gocart_dust_afwa.F/module_gocart_settling.F for the
+   ! same lookup table). mass_mineral/vol_mineral are per-optical-bin
+   ! mineral masses/volumes gathered the same way mass_soil is gathered
+   ! from dustfrc_goc8bin; dust_ri_sw/dust_ri_lw hold the resulting
+   ! per-optical-bin dust CRI (falls back to the bulk swref_index_dust/
+   ! lwref_index_dust when dust_mineral_opt=0 or a bin has no dust mass).
+   INTEGER, DIMENSION(7,nmineral) :: p_dust_mineral
+   INTEGER :: mn
+   REAL :: mass_mineral(nmineral), vol_mineral(nmineral), vol_total, vol_host, f_fe
+   ! Host mixing is done in permittivity (eps=(n+ik)^2) space, volume-
+   ! averaged across the 7 non-iron minerals, following Obiso et al.
+   ! (ACP, 2024) -- NOT by volume-averaging n,k directly then squaring
+   ! (those differ since squaring is nonlinear).
+   COMPLEX, DIMENSION(nmineral) :: eps_mineral
+   COMPLEX :: eps_host, eps_incl, eps_eff
+   COMPLEX, DIMENSION(nswbands) :: dust_ri_sw
+   COMPLEX, DIMENSION(nlwbands) :: dust_ri_lw
+   REAL, PARAMETER :: vol_tiny = 1.0e-30
+
+   p_dust_mineral(1,:) = (/ p_dust_1_min1, p_dust_1_min2, p_dust_1_min3, p_dust_1_min4, p_dust_1_min5, p_dust_1_min6, p_dust_1_min7, p_dust_1_min8 /)
+   p_dust_mineral(2,:) = (/ p_dust_2_min1, p_dust_2_min2, p_dust_2_min3, p_dust_2_min4, p_dust_2_min5, p_dust_2_min6, p_dust_2_min7, p_dust_2_min8 /)
+   p_dust_mineral(3,:) = (/ p_dust_3_min1, p_dust_3_min2, p_dust_3_min3, p_dust_3_min4, p_dust_3_min5, p_dust_3_min6, p_dust_3_min7, p_dust_3_min8 /)
+   p_dust_mineral(4,:) = (/ p_dust_4_min1, p_dust_4_min2, p_dust_4_min3, p_dust_4_min4, p_dust_4_min5, p_dust_4_min6, p_dust_4_min7, p_dust_4_min8 /)
+   p_dust_mineral(5,:) = (/ p_dust_5_min1, p_dust_5_min2, p_dust_5_min3, p_dust_5_min4, p_dust_5_min5, p_dust_5_min6, p_dust_5_min7, p_dust_5_min8 /)
+   p_dust_mineral(6,:) = (/ p_dust_6_min1, p_dust_6_min2, p_dust_6_min3, p_dust_6_min4, p_dust_6_min5, p_dust_6_min6, p_dust_6_min7, p_dust_6_min8 /)
+   p_dust_mineral(7,:) = (/ p_dust_7_min1, p_dust_7_min2, p_dust_7_min3, p_dust_7_min4, p_dust_7_min5, p_dust_7_min6, p_dust_7_min7, p_dust_7_min8 /)
 
   if (uoc == 1) then   ! mklose
      den_dust(1) = 2650.   ! change dust density in first bin for UoC dust emission schemes
@@ -4056,6 +4093,66 @@ END subroutine optical_prep_modal_soa_vbs
        mass_cl=mass_seas*conv1a*35.4530/58.4428
        mass_na=mass_seas*conv1a*22.9898/58.4428
        mass_soil=mass_soil*conv1a
+
+       ! --- Mineral-resolved dust CRI (namelist dust_mineral_opt) ---
+       ! Default: fall back to the bulk (non-mineral) dust CRI built from
+       ! refrsw_dust/refrlw_dust above; this keeps dust_mineral_opt=0
+       ! byte-identical to the original behavior.
+       dust_ri_sw(:) = swref_index_dust(:)
+       dust_ri_lw(:) = lwref_index_dust(:)
+       IF (dust_mineral_opt == 1) THEN
+         mass_mineral(:) = 0.0
+         do n = 1, merge(ndust,5,dust_supercoarse_opt==1)
+           do mn = 1, nmineral
+             mass_mineral(mn) = mass_mineral(mn) + &
+                  dustfrc_goc8bin(n,isize)*chem(i,k,j,p_dust_mineral(n,mn))
+           end do
+         end do
+         mass_mineral(:) = mass_mineral(:)*conv1a
+         do mn = 1, nmineral
+           vol_mineral(mn) = mass_mineral(mn) / dens_mineral(mn)
+         end do
+         vol_total = SUM(vol_mineral(:))
+         vol_host  = vol_total - vol_mineral(mineral_fe)
+         IF (vol_total .gt. vol_tiny .and. vol_host .gt. vol_tiny) THEN
+           ! Host = volume-weighted mean of the 7 non-iron-oxide minerals;
+           ! inclusion = iron oxide; Maxwell-Garnett mixes the two into an
+           ! effective per-optical-bin dust dielectric function.
+           f_fe = vol_mineral(mineral_fe) / vol_total
+           do ns = 1, nswbands
+             do mn = 1, nmineral
+               eps_mineral(mn) = cmplx( refrsw_mineral(ns,mn), refisw_mineral(ns,mn) )**2
+             end do
+             eps_host = SUM( vol_mineral(2:nmineral)*eps_mineral(2:nmineral) ) / vol_host
+             eps_incl = eps_mineral(mineral_fe)
+             eps_eff  = eps_host * ( eps_incl*(1.0+2.0*f_fe) + 2.0*eps_host*(1.0-f_fe) ) / &
+                                   ( eps_incl*(1.0-f_fe)     +     eps_host*(2.0+f_fe) )
+             dust_ri_sw(ns) = SQRT(eps_eff)
+           end do
+           do ns = 1, nlwbands
+             do mn = 1, nmineral
+               eps_mineral(mn) = cmplx( refrlw_mineral(ns,mn), refilw_mineral(ns,mn) )**2
+             end do
+             eps_host = SUM( vol_mineral(2:nmineral)*eps_mineral(2:nmineral) ) / vol_host
+             eps_incl = eps_mineral(mineral_fe)
+             eps_eff  = eps_host * ( eps_incl*(1.0+2.0*f_fe) + 2.0*eps_host*(1.0-f_fe) ) / &
+                                   ( eps_incl*(1.0-f_fe)     +     eps_host*(2.0+f_fe) )
+             dust_ri_lw(ns) = SQRT(eps_eff)
+           end do
+         ELSE IF (vol_total .gt. vol_tiny) THEN
+           ! Host volume ~0 (bin is essentially pure iron oxide): use its
+           ! CRI directly rather than dividing by ~zero host volume.
+           do ns = 1, nswbands
+             dust_ri_sw(ns) = cmplx( refrsw_mineral(ns,mineral_fe), refisw_mineral(ns,mineral_fe) )
+           end do
+           do ns = 1, nlwbands
+             dust_ri_lw(ns) = cmplx( refrlw_mineral(ns,mineral_fe), refilw_mineral(ns,mineral_fe) )
+           end do
+         ENDIF
+         ! (vol_total <= vol_tiny: no dust mass mapped to this optical bin;
+         ! dust_ri_sw/lw keep the bulk fallback set above, which is
+         ! harmless since mass_soil is also ~0 there.)
+       ENDIF
 !         mass_h2o = 0.0 ! testing purposes only
           vol_so4 = mass_so4 / dens_so4
           vol_no3 = mass_no3 / dens_no3
@@ -4101,7 +4198,7 @@ END subroutine optical_prep_modal_soa_vbs
                        (ref_index_nh4no3 * mass_no3 / dens_no3) +  &
                        (ref_index_nh4no3 * mass_nh4 / dens_nh4) +  &
                        (ref_index_oin    * mass_oin / dens_oin) +  &
-                       (swref_index_dust(ns) * mass_soil / dens_dust) + &
+                       (dust_ri_sw(ns) * mass_soil / dens_dust) + &
                        (swref_index_oc(ns)     * mass_oc  / dens_oc) +   &
                        (ref_index_bc     * mass_bc  / dens_bc) +   &
                        (swref_index_nacl(ns)   * mass_na  / dens_na) +   &
@@ -4128,7 +4225,7 @@ END subroutine optical_prep_modal_soa_vbs
                        (ref_index_nh4no3 * mass_nh4 / dens_nh4) +  &
                        (ref_index_msa    * mass_msa / dens_msa) +  &
                        (ref_index_oin    * mass_oin / dens_oin) +  &
-                       (swref_index_dust(ns)    * mass_soil / dens_dust) + &
+                       (dust_ri_sw(ns)    * mass_soil / dens_dust) + &
                        (swref_index_oc(ns)     * mass_oc  / dens_oc) +   &
                        (swref_index_nacl(ns)   * mass_na  / dens_na) +   &
                        (swref_index_nacl(ns)   * mass_cl  / dens_cl) +   &
@@ -4165,7 +4262,7 @@ END subroutine optical_prep_modal_soa_vbs
                        (ref_index_nh4no3 * mass_no3 / dens_no3) +  &
                        (ref_index_nh4no3 * mass_nh4 / dens_nh4) +  &
                        (ref_index_oin    * mass_oin / dens_oin) +  &
-                       (lwref_index_dust(ns) * mass_soil / dens_dust) + &
+                       (dust_ri_lw(ns) * mass_soil / dens_dust) + &
                        (lwref_index_oc(ns)     * mass_oc  / dens_oc) +   &
                        (ref_index_bc     * mass_bc  / dens_bc) +   &
                        (lwref_index_nacl(ns)   * mass_na  / dens_na) +   &
@@ -4191,7 +4288,7 @@ END subroutine optical_prep_modal_soa_vbs
                        (ref_index_nh4no3 * mass_no3 / dens_no3) +  &
                        (ref_index_nh4no3 * mass_nh4 / dens_nh4) +  &
                        (ref_index_oin    * mass_oin / dens_oin) +  &
-                       (lwref_index_dust(ns)    * mass_oin / dens_dust)  +  &
+                       (dust_ri_lw(ns)    * mass_soil / dens_dust)  +  &
                        (lwref_index_oc(ns)     * mass_oc  / dens_oc) +   &
                        (lwref_index_nacl(ns)   * mass_na  / dens_na) +   &
                        (lwref_index_nacl(ns)   * mass_cl  / dens_cl) +   &

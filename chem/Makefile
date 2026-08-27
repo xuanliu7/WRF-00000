@@ -51,6 +51,7 @@ MODULES =                                 \
         module_data_mosaic_therm.o        \
         module_data_radm2.o               \
         module_data_rrtmgaeropt.o         \
+        module_data_mineral_cri.o         \
         module_data_megan2.o              \
         module_data_soa_vbs.o             \
         module_data_soa_vbs_het.o         \
