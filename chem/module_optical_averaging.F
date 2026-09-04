@@ -430,7 +430,7 @@
 !            number_bin_col, radius_wet_col, refindx_col,              &
              number_bin_col, radius_wet_col,swrefindx_col,             &
              lwrefindx_col,     &
-             dz, curr_secs, kts, kte,                                  &
+             dz, curr_secs, kts, kte, config_flags%dust_mineral_opt,    &
 !            sizeaer, extaer, waer, gaer, tauaer,                      &
              swsizeaer,swextaer,swwaer,swgaer,swtauaer,                &
              lwextaer,lwtauaer,                &
@@ -4364,20 +4364,23 @@ END subroutine optical_prep_modal_soa_vbs
 	          id, iclm, jclm, nbin_a,   &
               number_bin_col, radius_wet_col, swrefindx_col,   &
               lwrefindx_col,   &
-              dz, curr_secs, kts,kte, &
+              dz, curr_secs, kts,kte, dust_mineral_opt, &
 !             sizeaer,extaer,waer,gaer,tauaer,l2,l3,l4,l5,l6,l7,bscoef)  ! added bscoef JCB 2007/02/01
-              swsizeaer,swextaer,swwaer,swgaer,swtauaer,lwextaer,lwtauaer, & 
+              swsizeaer,swextaer,swwaer,swgaer,swtauaer,lwextaer,lwtauaer, &
               l2,l3,l4,l5,l6,l7,swbscoef)  ! added bscoef JCB 2007/02/01
 
 !       USE module_data_mosaic_other, only : kmaxd
 !       USE module_data_mosaic_therm, ONLY: nbin_a_maxd
         USE module_peg_util, only:  peg_error_fatal, peg_message
-        
+        USE module_data_mineral_cri, only: nmineral, refrsw_mineral, refisw_mineral, &
+             refrlw_mineral, refilw_mineral
+
         IMPLICIT NONE
 
         integer,parameter :: nspint = 4 ! Num of spectral for FAST-J
-        integer, intent(in) :: kts,kte 
+        integer, intent(in) :: kts,kte
         integer, intent(in) :: id, iclm, jclm, nbin_a
+        integer, intent(in) :: dust_mineral_opt
         real(kind=8), intent(in) :: curr_secs
 
         real, dimension (1:nspint,kts:kte),intent(out) :: swsizeaer,swextaer,swwaer,swgaer,swtauaer
@@ -4395,6 +4398,11 @@ END subroutine optical_prep_modal_soa_vbs
         parameter (ltype = 1)  ! bracket refractive indices based on information from Rahul, 2002/11/07
         integer nrefr,nrefi,nr,ni
         save nrefr,nrefi
+        ! table size used when dust_mineral_opt/=1: matches the original
+        ! (pre mineral-CRI) prefr/prefi so dust_mineral_opt=0 runs keep the
+        ! original table resolution/results, independent of the wider
+        ! prefr/prefi capacity added for the mineral-resolved CRI range.
+        integer, parameter :: prefr_bulk=7, prefi_bulk=7
         complex*16 sforw,sback,tforw(2),tback(2)
         real*8 pmom(0:7,1)
         logical, save :: ini_fit  ! initial mie fit only for the first time step
@@ -4444,6 +4452,7 @@ END subroutine optical_prep_modal_soa_vbs
 	real thesum ! for normalizing things
 	real sizem ! size in microns
         integer m, j, nc, klevel
+        integer mn ! mineral loop index, widening the refr/refi table range below
         real pext           ! parameterized specific extinction (cm2/g)
         real pscat      !scattering cross section
         real pabs           ! parameterized specific extinction (cm2/g)
@@ -4576,9 +4585,22 @@ END subroutine optical_prep_modal_soa_vbs
           refimax=max(refimax,refi)
         enddo
 
+! also span the per-mineral CRI (dust_mineral_opt=1) so the table doesn't
+! clamp/bias the Maxwell-Garnett-mixed mineral dust refractive index
+        if (dust_mineral_opt == 1) then
+          do mn=1,nmineral
+            refr=refrsw_mineral(ns,mn)
+            refi=-refisw_mineral(ns,mn)
+            refrmin=min(refrmin,refr)
+            refrmax=max(refrmax,refr)
+            refimin=min(refimin,refi)
+            refimax=max(refimax,refi)
+          enddo
+        endif
+
          drefr=(refrmax-refrmin)
          if(drefr.gt.1.e-4)then
-            nrefr=prefr
+            nrefr=merge(prefr,prefr_bulk,dust_mineral_opt==1)
             drefr=drefr/(nrefr-1)
          else
             nrefr=1
@@ -4586,7 +4608,7 @@ END subroutine optical_prep_modal_soa_vbs
 
          drefi=(refimax-refimin)
          if(drefi.gt.1.e-4)then
-            nrefi=prefi
+            nrefi=merge(prefi,prefi_bulk,dust_mineral_opt==1)
             drefi=drefi/(nrefi-1)
          else
             nrefi=1
@@ -4692,9 +4714,22 @@ END subroutine optical_prep_modal_soa_vbs
           refimax=max(refimax,refi)
         enddo
 
+! also span the per-mineral CRI (dust_mineral_opt=1) so the table doesn't
+! clamp/bias the Maxwell-Garnett-mixed mineral dust refractive index
+        if (dust_mineral_opt == 1) then
+          do mn=1,nmineral
+            refr=refrlw_mineral(ns,mn)
+            refi=-refilw_mineral(ns,mn)
+            refrmin=min(refrmin,refr)
+            refrmax=max(refrmax,refr)
+            refimin=min(refimin,refi)
+            refimax=max(refimax,refi)
+          enddo
+        endif
+
          drefr=(refrmax-refrmin)
          if(drefr.gt.1.e-4)then
-            nrefr=prefr
+            nrefr=merge(prefr,prefr_bulk,dust_mineral_opt==1)
             drefr=drefr/(nrefr-1)
          else
             nrefr=1
@@ -4702,7 +4737,7 @@ END subroutine optical_prep_modal_soa_vbs
 
          drefi=(refimax-refimin)
          if(drefi.gt.1.e-4)then
-            nrefi=prefi
+            nrefi=merge(prefi,prefi_bulk,dust_mineral_opt==1)
             drefi=drefi/(nrefi-1)
          else
             nrefi=1
@@ -4849,16 +4884,16 @@ END subroutine optical_prep_modal_soa_vbs
              refr = refrtabsw(1,ns)
              write(*,*), 'Warning: refr is smaller than lookup table range and reset to minimum bound at SW band ', ns
           endif
-          if (refr > refrtabsw(prefr,ns)) then
-             refr = refrtabsw(prefr,ns)
+          if (refr > refrtabsw(nrefr,ns)) then
+             refr = refrtabsw(nrefr,ns)
              write(*,*), 'Warning: refr is larger than lookup table range and reset to maximum bound at SW band ', ns
           endif
           if (refi < refitabsw(1,ns)) then
              refi = refitabsw(1,ns)
              write(*,*), 'Warning: refi is smaller than lookup table range and reset to minimum bound at SW band ', ns
           endif
-          if (refi > refitabsw(prefi,ns)) then
-             refi = refitabsw(prefi,ns)
+          if (refi > refitabsw(nrefi,ns)) then
+             refi = refitabsw(nrefi,ns)
              write(*,*), 'Warning: refi is larger than lookup table range and reset to maximum bound at SW band ', ns
           endif
 
@@ -5124,16 +5159,16 @@ END subroutine optical_prep_modal_soa_vbs
              refr = refrtablw(1,ns)
              write(*,*), 'Warning: refr is smaller than lookup table range and reset to minimum bound at LW band ', ns
           endif
-          if (refr > refrtablw(prefr,ns)) then
-             refr = refrtablw(prefr,ns)
+          if (refr > refrtablw(nrefr,ns)) then
+             refr = refrtablw(nrefr,ns)
              write(*,*), 'Warning: refr is larger than lookup table range and reset to maximum bound at LW band ', ns
           endif
-          if (refi < refitablw(1,ns)) then    
+          if (refi < refitablw(1,ns)) then
              refi = refitablw(1,ns)
              write(*,*), 'Warning: refi is smaller than lookup table range and reset to minimum bound at LW band ', ns
           endif
-          if (refi > refitablw(prefi,ns)) then
-             refi = refitablw(prefi,ns)
+          if (refi > refitablw(nrefi,ns)) then
+             refi = refitablw(nrefi,ns)
              write(*,*), 'Warning: refi is larger than lookup table range and reset to maximum bound at LW band ', ns
           endif
 

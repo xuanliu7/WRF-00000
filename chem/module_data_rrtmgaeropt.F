@@ -99,7 +99,17 @@ MODULE module_data_rrtmgaeropt
 
       !Chebychev polynomial
       !integer,parameter :: prefr=7,prefi=10
-      integer,parameter :: prefr=7,prefi=7
+      ! Widened from 7 to preserve resolution now that the refr/refi table
+      ! (built in mieaer, module_optical_averaging.F) also spans the
+      ! mineral-resolved dust CRI range (module_data_mineral_cri.F), which
+      ! is much wider than the original 5-species (dust/BC/OC/seasalt/
+      ! sulfate) range alone. This is the max table capacity; mieaer only
+      ! uses all 15x15 nodes when namelist dust_mineral_opt=1, and falls
+      ! back to the original 7x7 (prefr_bulk/prefi_bulk in mieaer) when
+      ! dust_mineral_opt=0, so default runs keep the original table
+      ! resolution/results. This only affects a one-time table build
+      ! (ini_fit in mieaer), not per-timestep cost.
+      integer,parameter :: prefr=15,prefi=15
       integer,parameter :: ncoef=50
       real,parameter :: rmmin=0.005e-4,rmmax=50.e-4  ! cm 
       real,save:: refrtabsw(prefr,nswbands)

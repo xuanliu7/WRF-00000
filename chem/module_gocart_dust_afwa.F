@@ -351,7 +351,7 @@ CONTAINS
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
       ! d_inc is computed unconditionally (cheap, and needed by both the
       ! region- and mineral-tagging blocks below).
-      DO nt = 1, 7
+      DO nt = 1, nmx
         d_inc(nt) = REAL( bems(nt) / (dz_lowest * airden(1,1)) ) * converi   ! ug/kg increment
       END DO
 
@@ -362,7 +362,7 @@ CONTAINS
         itag = ntag                                    ! default bucket: "out" (region 2)
         IF (NINT(srcmask(i,j)) == 1) itag = 1           ! region 1 ("r1")
 
-        DO nt = 1, 7
+        DO nt = 1, nmx
           chem(i,kts,j,p_dust_tag(itag,nt)) = chem(i,kts,j,p_dust_tag(itag,nt)) + d_inc(nt)
         END DO
       ENDIF
@@ -372,7 +372,7 @@ CONTAINS
       ! Split each bin's emission increment by mineral mass fraction and add
       ! into the separately-transported dust_<bin>_min<mineral> species.
       IF (config_flags%dust_mineral_opt == 1) THEN
-      DO nt = 1, 7
+      DO nt = 1, nmx
         DO mn = 1, nmin
           chem(i,kts,j,p_dust_mineral(nt,mn)) = chem(i,kts,j,p_dust_mineral(nt,mn)) &
                                                + d_inc(nt) * dust_mineralogy(i,j,(mn-1)*7+nt)
