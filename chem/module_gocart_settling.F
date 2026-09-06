@@ -88,8 +88,8 @@ SUBROUTINE gocart_settling_driver(dt,config_flags,t_phy,moist,      &
 
   ! Effective number of dust bins to settle: matches the bin count actually
   ! emitted by gocart_dust_afwa_driver under the same namelist option (0=
-  ! original 5-bin scheme, 1=7-bin with super-coarse bins 6-7).
-  IF (config_flags%dust_supercoarse_opt == 1) THEN
+  ! original 5-bin scheme, 1/2=7-bin with super-coarse bins 6-7).
+  IF (config_flags%dust_supercoarse_opt /= 0) THEN
     nmx = 7
   ELSE
     nmx = 5

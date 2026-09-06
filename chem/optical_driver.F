@@ -147,9 +147,9 @@
      ! to cover the AFWA super-coarse dust bins (6-7, 20-62.5um diameter)
      ! without coarsening the original 8 bins' resolution for the other
      ! species (see optical_prep_gocart in module_optical_averaging.F).
-     ! Only when dust_supercoarse_opt=1; =0 reproduces the original 8-bin
-     ! GOCART_SIMPLE optics exactly.
-     if (config_flags%dust_supercoarse_opt == 1) then
+     ! Only when dust_supercoarse_opt/=0 (1=Meng 2022, 2=user-revised PSD);
+     ! =0 reproduces the original 8-bin GOCART_SIMPLE optics exactly.
+     if (config_flags%dust_supercoarse_opt /= 0) then
        nbin_o = 11
      else
        nbin_o = 8

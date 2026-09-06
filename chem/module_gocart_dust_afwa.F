@@ -125,7 +125,8 @@ CONTAINS
 
   ! Number of dust bins. dust_supercoarse_opt=0 (default) reproduces the
   ! original 5-bin AFWA scheme (Kok 2011 weights, bins 6-7 never emit);
-  ! =1 uses all 7 bins with the Meng (2022) BFT-supercoarse weights.
+  ! =1 uses all 7 bins with the Meng (2022) BFT-supercoarse weights;
+  ! =2 uses all 7 bins with the user-revised PSD weights.
   ! Region (srcmask) tagging is unaffected either way.
 
   imx=1
@@ -134,6 +135,9 @@ CONTAINS
   IF (config_flags%dust_supercoarse_opt == 1) THEN
     nmx=ndust
     distr_dust_use(1:ndust) = distr_dust(1:ndust)
+  ELSE IF (config_flags%dust_supercoarse_opt == 2) THEN
+    nmx=ndust
+    distr_dust_use(1:ndust) = distr_dust_revised(1:ndust)
   ELSE
     nmx=5
     distr_dust_use(1:5) = distr_dust_orig5(1:5)
@@ -566,8 +570,8 @@ CONTAINS
   REAL,   INTENT(IN)  :: dz_lowest
 
   ! Mass-fraction weight per dust bin, chosen by the caller based on
-  ! namelist dust_supercoarse_opt (5-bin Kok 2011 vs 7-bin Meng 2022
-  ! weights; see gocart_dust_afwa_driver).
+  ! namelist dust_supercoarse_opt (5-bin Kok 2011 vs 7-bin Meng 2022 vs
+  ! 7-bin user-revised weights; see gocart_dust_afwa_driver).
   REAL*8, INTENT(IN)    :: distr_dust_use(nmx)
 
   REAL*8    :: den(smx), diam(smx)

@@ -3572,8 +3572,9 @@ END subroutine optical_prep_modal_soa_vbs
    INTEGER, INTENT(IN   ) :: ims,ime, jms,jme, kms,kme
    INTEGER, INTENT(IN   ) :: ids,ide, jds,jde, kds,kde
    ! 0=original 5-bin AFWA dust (8 optical bins, this routine's original
-   ! behavior); 1=7-bin with super-coarse bins 6-7 (11 optical bins, covering
-   ! up to 62.5um diameter). See namelist dust_supercoarse_opt.
+   ! behavior); 1/2=7-bin with super-coarse bins 6-7 (11 optical bins, covering
+   ! up to 62.5um diameter; 1=Meng 2022 PSD, 2=user-revised PSD). See namelist
+   ! dust_supercoarse_opt.
    INTEGER, INTENT(IN   ) :: dust_supercoarse_opt
    ! 0=bulk dust CRI (refrsw_dust/refrlw_dust, this routine's original
    ! behavior); 1=per-bin dust CRI from transported dust_<bin>_min<mineral>
@@ -3663,7 +3664,7 @@ END subroutine optical_prep_modal_soa_vbs
    integer, parameter :: nbin_fine=8
    ! nbin_omoz sizes the SAVE'd fraction arrays below; must be a compile-time
    ! constant large enough for the largest nbin_o any caller passes in
-   ! (11, when dust_supercoarse_opt=1; see optical_driver.F).
+   ! (11, when dust_supercoarse_opt/=0; see optical_driver.F).
    integer, parameter :: nbin_omoz=11
    real, save :: seasfrc_goc8bin(4,nbin_omoz)   ! GOCART seasalt size distibution - mass fracs in MOSAIC 8-bins
    real, save :: dustfrc_goc8bin(ndust,nbin_omoz)   ! GOCART dust size distibution - mass fracs in MOSAIC 8-bins
@@ -3724,7 +3725,7 @@ END subroutine optical_prep_modal_soa_vbs
       dlo_um=0.0390625
       dmid_um=10.0
       ! dhi_um is only widened beyond the original 10um cap when nbin_o
-      ! exceeds nbin_fine (i.e. dust_supercoarse_opt=1); otherwise this
+      ! exceeds nbin_fine (i.e. dust_supercoarse_opt/=0); otherwise this
       ! routine reproduces the original single-segment 8-bin grid exactly.
       if (nbin_o .gt. nbin_fine) then
         dhi_um=62.5
@@ -4085,8 +4086,9 @@ END subroutine optical_prep_modal_soa_vbs
        n = 0
        mass_soil = 0.0
        ! dust_supercoarse_opt=0: only bins 1-5 (Kok 2011) are ever emitted,
-       ! so limit the loop to 5 bins even though ndust=7; =1: all 7 bins.
-       do m =p_dust_1,  p_dust_1+merge(ndust,5,dust_supercoarse_opt==1)-1
+       ! so limit the loop to 5 bins even though ndust=7; /=0 (1=Meng 2022,
+       ! 2=user-revised PSD): all 7 bins.
+       do m =p_dust_1,  p_dust_1+merge(ndust,5,dust_supercoarse_opt/=0)-1
        n = n+1
         mass_soil=mass_soil+dustfrc_goc8bin(n,isize)*chem(i,k,j,m)
        end do
@@ -4102,7 +4104,7 @@ END subroutine optical_prep_modal_soa_vbs
        dust_ri_lw(:) = lwref_index_dust(:)
        IF (dust_mineral_opt == 1) THEN
          mass_mineral(:) = 0.0
-         do n = 1, merge(ndust,5,dust_supercoarse_opt==1)
+         do n = 1, merge(ndust,5,dust_supercoarse_opt/=0)
            do mn = 1, nmineral
              mass_mineral(mn) = mass_mineral(mn) + &
                   dustfrc_goc8bin(n,isize)*chem(i,k,j,p_dust_mineral(n,mn))
