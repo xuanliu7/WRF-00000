@@ -4400,11 +4400,15 @@ END subroutine optical_prep_modal_soa_vbs
         parameter (ltype = 1)  ! bracket refractive indices based on information from Rahul, 2002/11/07
         integer nrefr,nrefi,nr,ni
         save nrefr,nrefi
-        ! table size used when dust_mineral_opt/=1: matches the original
-        ! (pre mineral-CRI) prefr/prefi so dust_mineral_opt=0 runs keep the
-        ! original table resolution/results, independent of the wider
-        ! prefr/prefi capacity added for the mineral-resolved CRI range.
-        integer, parameter :: prefr_bulk=7, prefi_bulk=7
+        ! nrefr/nrefi must always equal prefr/prefi (never a smaller
+        ! fallback): binterp() below receives extpsw(1,1,1,ns) etc. as a
+        ! bare memory address (no array descriptor) and reinterprets it
+        ! using the nrefr/nrefi passed at the call site as the assumed
+        ! middle-dimension stride. Since extpsw is actually dimensioned
+        ! (ncoef,prefr,prefi,nswbands), passing nrefr/nrefi<prefr/prefi
+        ! makes binterp read at the wrong offsets (effectively a corrupt
+        ! reshape) -- confirmed via a real regression when this used a
+        ! smaller prefr_bulk/prefi_bulk fallback for dust_mineral_opt=0.
         complex*16 sforw,sback,tforw(2),tback(2)
         real*8 pmom(0:7,1)
         logical, save :: ini_fit  ! initial mie fit only for the first time step
@@ -4602,7 +4606,7 @@ END subroutine optical_prep_modal_soa_vbs
 
          drefr=(refrmax-refrmin)
          if(drefr.gt.1.e-4)then
-            nrefr=merge(prefr,prefr_bulk,dust_mineral_opt==1)
+            nrefr=prefr
             drefr=drefr/(nrefr-1)
          else
             nrefr=1
@@ -4610,7 +4614,7 @@ END subroutine optical_prep_modal_soa_vbs
 
          drefi=(refimax-refimin)
          if(drefi.gt.1.e-4)then
-            nrefi=merge(prefi,prefi_bulk,dust_mineral_opt==1)
+            nrefi=prefi
             drefi=drefi/(nrefi-1)
          else
             nrefi=1
@@ -4731,7 +4735,7 @@ END subroutine optical_prep_modal_soa_vbs
 
          drefr=(refrmax-refrmin)
          if(drefr.gt.1.e-4)then
-            nrefr=merge(prefr,prefr_bulk,dust_mineral_opt==1)
+            nrefr=prefr
             drefr=drefr/(nrefr-1)
          else
             nrefr=1
@@ -4739,7 +4743,7 @@ END subroutine optical_prep_modal_soa_vbs
 
          drefi=(refimax-refimin)
          if(drefi.gt.1.e-4)then
-            nrefi=merge(prefi,prefi_bulk,dust_mineral_opt==1)
+            nrefi=prefi
             drefi=drefi/(nrefi-1)
          else
             nrefi=1
