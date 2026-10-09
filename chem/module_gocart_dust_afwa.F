@@ -17,7 +17,7 @@ CONTAINS
   SUBROUTINE gocart_dust_afwa_driver(dt,config_flags,alt,  &
          chem,rho_phy,smois,u10,v10,dz8w,erod,erod_dri,dustin,snowh,   &
          isltyp,vegfra,lai_vegmask,xland,g,emis_dust,      &
-         ust,znt,clay_wrf,sand_wrf,clay_nga,sand_nga,afwa_dustloft,                 &
+         ust,znt,clay_wrf,sand_wrf,clay_nga,sand_nga,afwa_dustloft,ust_t,           &
          tot_dust,tot_edust,vis_dust,alpha,gamma,smtune,ustune,            &
          srcmask,                                                          &
          frcovbare,                                                        &
@@ -75,6 +75,7 @@ CONTAINS
                                                      rho_phy
   REAL, DIMENSION( ims:ime , jms:jme )               ,                     &
          INTENT(  OUT) ::                            afwa_dustloft,        &
+                                                     ust_t,                &
                                                      tot_edust
   REAL, DIMENSION( ims:ime , kms:kme , jms:jme ),                          &
          INTENT(  OUT) ::                            tot_dust,             &
@@ -164,6 +165,7 @@ CONTAINS
     ! Masked value for afwa_dustloft
 
     afwa_dustloft(i,j)=-99.
+    ust_t(i,j)=0.   ! threshold friction velocity; stays 0 over water/non-land below
 
     ! Don't do dust over water!!!
 
@@ -351,6 +353,10 @@ CONTAINS
                        bems, ustart, g, drylimit, alpha, gamma, smois_opt, &
                        frcovbare(i,j), dpfct(i,j), distr_dust_use(1:nmx), &
                        config_flags%dust_afwa_phys_opt)
+      ust_t(i,j) = ustart   ! threshold friction velocity (m/s), independent
+                             ! of whether this cell actually has erodible
+                             ! fraction (unlike afwa_dustloft, not gated on
+                             ! erodtot>0 below)
 
       ! Convert emission (kg/m2) to mixing ratio increment and then to ug/kg using converi.
       ! d_inc is computed unconditionally (cheap, and needed by both the
